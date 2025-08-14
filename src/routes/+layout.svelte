@@ -1,0 +1,402 @@
+<script>
+import "../app.css";
+import { fade,slide } from "svelte/transition";
+import { auth } from "$lib/firebase.js";
+import { signOut } from "firebase/auth";
+import { breakpoints } from "$lib/breakpoints.js";
+import { page } from "$app/stores";
+import { goto } from "$app/navigation";
+import { onMount } from "svelte";
+import { clearNotes } from "$lib/noteStore.svelte.js";
+import { clearTasks } from "$lib/taskStore.js";
+import { initializeAuth } from "$lib/userStore.js";
+import { browser } from "$app/environment";
+import { user } from "$lib/userStore.js";
+import "@material/web/all.js";
+
+let path = $derived($page.url.pathname);
+let { children } = $props();
+let showWelcome = $state(false);
+
+onMount(() => {
+  const stored = localStorage.getItem("welcomeDismissed");
+  if (stored !== "true") {
+    showWelcome = true;
+  }
+});
+function dismissWelcome() {
+  showWelcome = false;
+  localStorage.setItem("welcomeDismissed", "true");
+}
+onMount(() => {
+  initializeAuth();
+});
+
+async function handleLogout() {
+  await signOut(auth);
+  clearNotes();
+  clearTasks();
+  goto("/");
+}
+
+let showParagraph = $state(false);
+
+function toggleParagraph() {
+  showParagraph = !showParagraph;
+}
+</script>
+
+{#if showWelcome}
+  <div transition:fade={{ duration: 300 }} class="welcome">
+    <h1>Welcome</h1>
+    <h3>Some Instructions:</h3>
+    <br />
+    <div class="instructions">
+      <p>1. Delete a task by long clicking on it</p>
+      <p>2. You can sign-up to sync your data or continue without it.</p>
+      <p>3. There are some bugs which will be fixed soon.</p>
+      <p>4. This website is <strong>mobile friendly.</strong></p>
+    </div>
+    <div class="spinner">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+
+    <md-filled-icon-button
+      role="button"
+      class="getStarted"
+      onclick={dismissWelcome}
+    >
+      <md-icon class="material-symbols-rounded"> arrow_right_alt </md-icon>
+    </md-filled-icon-button>
+  </div>
+{/if}
+
+<div class="app">
+
+      {#if $breakpoints.isTablet || $breakpoints.isDesktop || $breakpoints.isLargeDesktop}
+      <div class="sideBar">
+        <img src="/logo.png" class="logo" alt="logo">
+        <a href="/" class="link"
+        ><md-icon class:active={path === "/"}>edit</md-icon>
+          <p class:active={path === "/"}>Tasks</p></a
+        >
+        <a href="/pomodoro" class="link"
+        ><md-icon class:active={path === "/pomodoro"}>schedule</md-icon>
+          <p class:active={path === "/pomodoro"}>Pomodoro</p></a
+        >
+        <a href="/notes" class="link"
+        ><md-icon class:active={path === "/notes"}>docs</md-icon>
+          <p class:active={path === "/notes"}>Notes</p></a
+        >
+      </div>
+    {/if}
+
+
+  <div class="content-wrap">
+
+      {#if path !== "/pomodoro" && path !== "/login"}
+    <header transition:slide={{ duration: 250 }} >
+      <h1>My {#if path === "/"} Tasks {:else} Notes {/if}</h1>
+      {#if $user}
+        <button onclick={toggleParagraph}>
+          {#if $user && $user.photoURL}
+            <img class="profileImage" src={$user.photoURL} alt="User Profile" />
+          {:else}
+            <md-icon class="profileIcon">account_circle</md-icon>
+          {/if}
+        </button>
+
+        {#if showParagraph}
+          <div transition:fade={{ duration: 200 }} class="info">
+            <p class="greet">
+              {#if $user && $user.photoURL}
+                <img class="profileImage" src={$user.photoURL} alt="User profile" />
+              {:else}
+                <img class="profileImage" src="/favicon.png" alt="Default profile" />
+              {/if}
+              Welcome, {$user?.displayName || 'User'}
+            </p>
+            <md-filled-tonal-button onclick={handleLogout}>
+              Log Out
+            </md-filled-tonal-button>
+          </div>
+        {/if}
+
+      {:else}
+        <a class="noLogin" href="/login"
+        ><span class="material-symbols-rounded"> person_add </span></a
+        >
+      {/if}
+    </header>
+  {/if}
+    {#key $page.url.pathname}
+      <main
+        in:fade={{ duration: 150, delay: 150 }}
+      >
+        {@render children?.()}
+      </main>
+    {/key}
+
+
+  {#if $breakpoints.isMobile}
+    <div class="navigation">
+      <a href="/"
+      ><md-icon class:active={path === "/"}>edit</md-icon>
+        <p class:active={path === "/"}>Tasks</p></a
+      >
+      <a href="/pomodoro"><md-icon class:active={path === "/pomodoro"}>schedule</md-icon>
+        <p class:active={path === "/pomodoro"}>Pomodoro</p></a
+      >
+      <a href="/notes">
+        <md-icon class:active={path === "/notes"}>docs</md-icon>
+        <p class:active={path === "/notes"}>Notes</p></a
+      >
+    </div>
+  {/if}
+  </div>
+</div>
+
+<style>
+.app {
+  display: flex;
+  height: 100dvh;
+}
+main {
+  flex-grow: 1;
+  overflow-y: auto;
+  inset: 0;
+}
+.sideBar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: fit-content;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 10px 10px 0 0;
+  border-right: 1.4px solid var(--md-sys-color-outline-variant);
+  padding: 0.8rem
+}
+.sideBar .link md-icon {
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+.sideBar a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: var(--space-small);
+  font-size: 0.9rem;
+}
+.content-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+header {
+  display: flex;
+  margin: 1rem 1.5rem;
+  align-content: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.profileImage {
+  width: 50px;
+  border-radius: 36px;
+  transition: all 0.3s ease;
+}
+.profileIcon {
+  font-size: 2.5rem;
+  transition: all 0.3s ease;
+}
+.profileImage:hover,.profileIcon:hover {
+  transform: scale(0.95);
+}
+.info {
+  position: absolute;
+  right: 10px;
+  top: 5rem;
+  display: flex;
+  flex-direction: column;
+  z-index: 22;
+  padding: 1rem;
+  background-color: var(--md-sys-color-surface-container-high);
+  opacity: 0.9;
+  border-radius: 16px;
+  box-shadow: 0px -2px 7px var(--md-sys-color-shadow);
+  font-weight: 500;
+}
+.noLogin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--md-sys-color-surface-container-high);
+  padding: 10px;
+  border-radius: 99px;
+  height: 50px;
+  width: 50px;
+  margin: auto 10px;
+}
+.noLogin span {
+  font-size: 1.4rem;
+}
+.greet {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-direction: column;
+  margin: 1rem;
+}
+.greet img {
+  width: 60px;
+}
+@media (min-width: 1024px) {
+  .instructions {
+    width: fit-content;
+  }
+  header {
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    padding: 0.5rem;
+  }
+}
+.navigation {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.6rem;
+  z-index: 10;
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface-variant);
+  width: 100%;
+}
+.navigation > * {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8rem;
+  width: 100%;
+  font-weight: 500;
+  flex-shrink: 1;
+}
+md-icon.active {
+  background-color: var(--md-sys-color-primary-container);
+  font-variation-settings: "FILL" 1;
+  color: var(--md-sys-color-on-primary-container);
+}
+p.active {
+  color: var(--md-sys-color-on-surface);
+}
+md-icon {
+  width: fit-content;
+  border-radius: 32px;
+  --md-icon-font: "Material Symbols Rounded";
+  transition: background-color 0.3s ease;
+  margin-bottom: 4px;
+  height: fit-content;
+  padding: 5px 18px 5px 18px;
+}
+.welcome {
+  background-color: var(--md-sys-color-surface-container);
+  z-index: 99;
+  position: absolute;
+  width: 100%;
+  padding: var(--space-small);
+  height: 100%;
+}
+.welcome h1 {
+  font-size: 3.4rem;
+  margin: var(--space-medium);
+  font-weight: 500;
+}
+.spinner {
+  width: 8px;
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  height: 8px;
+  animation: spinner-o824ag 1s infinite linear;
+}
+
+.spinner div {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: var(--md-sys-color-tertiary);
+  border-radius: 50%;
+  animation: spinner-vse6n7 1.25s infinite ease;
+}
+
+.spinner div:nth-child(1) {
+  --rotation: 90;
+}
+
+.spinner div:nth-child(2) {
+  --rotation: 180;
+}
+
+.spinner div:nth-child(3) {
+  --rotation: 270;
+}
+
+.spinner div:nth-child(4) {
+  --rotation: 360;
+}
+
+@keyframes spinner-vse6n7 {
+0%,
+100% {
+  transform: rotate(calc(var(--rotation) * 1deg)) translateY(0);
+}
+
+50% {
+  transform: rotate(calc(var(--rotation) * 1deg)) translateY(300%);
+}
+}
+
+@keyframes spinner-o824ag {
+to {
+  transform: rotate(360deg);
+}
+}
+.getStarted {
+  width: 85px;
+  height: 70px;
+  position: fixed;
+  bottom: 3rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+h3 {
+  padding: 1rem 1rem 0 1rem;
+  font-weight: 500;
+  color: var(--md-sys-color-primary);
+  font-size: 0.95rem;
+  margin: var(--space-small);
+}
+.instructions {
+  font-size: 0.93rem;
+  line-height: 2;
+  color: var(--md-sys-color-on-surface-variant);
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 16px;
+  margin: var(--space-medium);
+  padding: 1rem;
+}
+h1 {
+  font-size: 2.9rem;
+  word-spacing: 0.9;
+  font-weight: 500;
+}
+.logo {
+  width: 80px;
+  height: 80px;
+  margin: 1rem auto;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-radius: 32px;
+}
+</style>
