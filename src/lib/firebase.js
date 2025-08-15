@@ -16,3 +16,4 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const googleAuth = new GoogleAuthProvider();
 export const db = getFirestore(app);
+console.log("Project ID:", import.meta.env.VITE_PROJECT_ID);
