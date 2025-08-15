@@ -146,7 +146,7 @@
 
 {#if state.deleteDialog.open}
   <md-dialog class="deleteDialog" open>
-    <div slot="headline">Delete Task?</div>
+    <div slot="headline" class="heading">Delete Task?</div>
     <div slot="content">
       Are you sure you want to delete this task? This action cannot be undone.
     </div>
@@ -671,14 +671,18 @@
     color: var(--md-sys-color-on-tertiary-container);
   }
   .deleteDialog {
-    width: 50%;
+    width: 75%;
     margin: auto;
   }
+  .deleteDialog .heading {
+    margin:1.5rem 1.8rem;
+  }
   .deleteDialog div {
-    margin: var(--space-medium);
+    margin: var(--space-small) 1.8rem;
   }
   .deleteDialog .actions {
     display: flex;
+    margin: 1rem;
     align-items: center;
   }
   .actions .b1 {

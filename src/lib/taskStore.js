@@ -11,18 +11,27 @@ export let searchQuery = writable("");
 export const filteredTasks = derived(
   [tasks, searchQuery],
   ([$tasks, $search]) => {
+    let filtered;
     if (!$search.trim()) {
-      return $tasks || [];
+      filtered = $tasks || [];
+    } else {
+      const searchTerm = $search.toLowerCase();
+      if (!Array.isArray($tasks)) {
+        filtered = [];
+      } else {
+        filtered = $tasks.filter(task => {
+          return task && typeof task.task === 'string' && task.task.toLowerCase().includes(searchTerm);
+        });
+      }
     }
-    const searchTerm = $search.toLowerCase();
-    if (!Array.isArray($tasks)) {
-      return [];
-    }
-    return $tasks.filter(task => {
-      return task && typeof task.task === 'string' && task.task.toLowerCase().includes(searchTerm);
+    return filtered.sort((a, b) => {
+      const isAHigh = a.priority === 'High';
+      const isBHigh = b.priority === 'High';
+      return isBHigh - isAHigh;
     });
   }
 );
+
 export const filteredOngoing = derived(filteredTasks, $filtered =>
   $filtered.filter(t => !t.completed)
 );

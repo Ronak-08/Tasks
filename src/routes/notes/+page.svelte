@@ -13,10 +13,9 @@ import { fade,slide } from "svelte/transition";
 import { searchQuery  } from "$lib/noteStore.svelte.js";
 import { browser } from '$app/environment';
 import { onMount } from "svelte";
-import { marked } from "marked";
-import DOMPurify from "dompurify";
 
 let showModal = $state(false);
+let renderedHtml = $state('<p>Loading note...</p>');
 let editingNote = $state(null);
 let noteTitle = $state("");
 let noteContent = $state("");
@@ -59,7 +58,22 @@ function cancelSelection() {
   selected = [];
 }
 
-let renderedHtml = $derived( browser ? DOMPurify.sanitize(marked.parse(noteContent || '')) : "");
+$effect(() => {
+  const currentContent = noteContent;
+  const renderMarkdown = async () => {
+      if (!browser) return;
+      try {
+        const { marked } = await import('marked');
+        const DOMPurify = (await import('dompurify')).default;
+        const dirtyHtml = marked.parse(currentContent || '');
+        renderedHtml = DOMPurify.sanitize(dirtyHtml);
+      } catch (error) {
+        console.error("Failed to render markdown:", error);
+        renderedHtml = '<p>Sorry, there was an error rendering this note.</p>';
+      }
+    };
+    renderMarkdown();
+})
 
 function openModal(note = null) {
   if (note) {
@@ -255,7 +269,7 @@ onMount(() => {
 }
 .notes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 0.7rem;
   margin: var(--space-large);
   padding: var(--space-small);
@@ -361,7 +375,7 @@ input {
 :global(textarea.note-content) {
   all: unset;
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 textarea.note-content,.markdown-preview {
   height: 100%;
@@ -376,7 +390,7 @@ textarea.note-content,.markdown-preview {
   background-color: var(--md-sys-color-surface-container);
 }
 .markdown-preview {
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 .warning {
   position: absolute;
