@@ -1,8 +1,6 @@
 <script>
 import "../app.css";
 import { fade,slide } from "svelte/transition";
-// import { auth } from "$lib/firebase.js";
-// import { signOut } from "firebase/auth";
 import { breakpoints } from "$lib/breakpoints.js";
 import { getFirebase } from "$lib/firebase.js";
 import { page } from "$app/stores";
@@ -33,6 +31,7 @@ onMount(() => {
       .then(registration => {
       })
       .catch(error => {
+        console.error("Service Worker registration failed:", error);
       });
   }
 });
