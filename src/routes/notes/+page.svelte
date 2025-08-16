@@ -109,10 +109,8 @@ function handleSubmit() {
         noteContent !== originalNoteState.content;
 
     if (hasChanged) {
-      console.log("Note has changed, updating...");
       updateNote(editingNote.id, noteTitle, noteContent);
     } else {
-      console.log("No changes detected, skipping update.");
     }
   } else {
     addNote(noteTitle, noteContent);
@@ -269,7 +267,7 @@ onMount(() => {
 }
 .notes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 0.7rem;
   margin: var(--space-large);
   padding: var(--space-small);

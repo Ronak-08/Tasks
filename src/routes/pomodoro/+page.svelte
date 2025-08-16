@@ -1,5 +1,6 @@
 <script>
 import Modal from "$lib/components/Modal.svelte";
+import "@material/web/switch/switch.js";
 import { pomodoro,cleanup, toggleTimer, reset, saveState } from "$lib/pomodoroStore.svelte.js";
 import { onDestroy } from "svelte";
 
@@ -105,7 +106,7 @@ const openSettings = (event) => {
 h1 {
   font-weight: 200;
   font-size: 1.1rem;
-  padding: 5px 17px;
+  padding: 5px 15px;
   background-color: var(--md-sys-color-primary-container);
   margin-bottom: 3rem;
   color: var(--md-sys-color-on-primary-container);
@@ -126,7 +127,7 @@ h1 {
 }
 .icon {
   vertical-align: middle;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
 }
 .reset {
   --md-filled-tonal-icon-button-container-width: 60px;

@@ -1,9 +1,7 @@
 import { writable, get, derived } from 'svelte/store';
-import { auth, db } from '$lib/firebase';
-import { collection, doc, getDocs, writeBatch, setDoc } from 'firebase/firestore';
 import { browser } from '$app/environment';
 import {user} from '$lib/userStore.js';
-
+import { getFirebase } from "$lib/firebase.js";
 export const tasks = writable([]);
 let pendingDeletions = [];
 export let searchQuery = writable("");
@@ -67,7 +65,6 @@ export function loadTasks() {
   
   const localDeletions = JSON.parse(localStorage.getItem("pendingDeletions") || "[]");
   pendingDeletions = localDeletions;
-  console.log("Tasks loaded from localStorage for initial display.");
 }
 
 function savePendingDeletions() {
@@ -87,6 +84,8 @@ export async function deleteTask(task) {
 
 export async function processPendingDeletions() {
   const cUser = get(user);
+  const { db } = await getFirebase();
+    const { doc,writeBatch } = await import('firebase/firestore');
   if (!cUser || pendingDeletions.length < 10) return;
 
   let batchDeletions = [];
@@ -115,7 +114,9 @@ export async function processPendingDeletions() {
     savePendingDeletions();
   }
 }
-export function addTask(taskData) {
+export async function addTask(taskData) {
+  const { db } = await getFirebase();
+  const { doc, setDoc } = await import('firebase/firestore');
 const task = {
     id: crypto.randomUUID(), 
     completed: false,
@@ -140,6 +141,8 @@ function debounce(func, delay) {
   };
 }
 const firestoreUpdate = debounce(async (task, userId) => {
+  const { db } = await getFirebase();
+  const { doc, setDoc } = await import('firebase/firestore');
   try {
     await setDoc(doc(db, 'users', userId, 'tasks', task.id), task);
   } catch (error) {
@@ -167,12 +170,12 @@ export async function completedTask(completedTask) {
 
 export async function syncTasksWithDb() {
   const currentUser = get(user);
+  const { db } = await getFirebase();
+  const { doc,writeBatch,getDocs,collection } = await import('firebase/firestore');
   
   if (!browser || !currentUser) {
-    console.log("Cannot sync: No browser environment or user not logged in");
     return;
   }
-  console.log("Starting task sync...");
   
   try {
     const localTasks = get(tasks);
@@ -197,19 +200,16 @@ export async function syncTasksWithDb() {
         });
       }
       await batch.commit();
-      console.log("Local changes pushed to Firestore.");
     } else {
       console.log("No local changes to sync.");
     }
 
-    console.log("Fetching authoritative state from Firestore...");
     const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'tasks'));
     const remoteTasks = querySnapshot.docs.map(doc => ({ ...doc.data() })); 
     const currentTasks = get(tasks);
     if (JSON.stringify(currentTasks) !== JSON.stringify(remoteTasks)) {
       tasks.set(remoteTasks);
       saveToLocalStorage();
-      console.log("Tasks updated from Firestore.");
     } else {
       console.log("No changes from Firestore.");
     }

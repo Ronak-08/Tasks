@@ -1,29 +1,33 @@
 import { writable } from 'svelte/store';
-import { auth } from '$lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { browser } from '$app/environment';
+import { getFirebase } from '$lib/firebase.js';
 
 import { syncTasksWithDb } from '$lib/taskStore.js';
-import { syncNotes as syncNotesWithDb } from '$lib/noteStore.svelte.js'; 
+import { syncNotes as syncNotesWithDb } from '$lib/noteStore.svelte.js';
 
 export const user = writable(null);
 
 let initialized = false;
-export function initializeAuth() {
+
+export async function initializeAuth() {
   if (!browser || initialized) return;
   initialized = true;
 
-  console.log("Auth Initialized!");
 
-  onAuthStateChanged(auth, async (firebaseUser) => {
-    user.set(firebaseUser);
+  try {
+    const { auth } = await getFirebase();
+    const { onAuthStateChanged } = await import('firebase/auth');
 
-    if (firebaseUser) {
-      console.log("User detected, triggering all syncs.");
-      await syncTasksWithDb();
-      await syncNotesWithDb();
-    } else {
-      console.log("User logged out.");
-    }
-  });
+    onAuthStateChanged(auth, async (firebaseUser) => {
+      user.set(firebaseUser);
+
+      if (firebaseUser) {
+        await syncTasksWithDb();
+        await syncNotesWithDb();
+      } else {
+      }
+    });
+  } catch (error) {
+    console.error("Failed to initialize Firebase Auth listener:", error);
+  }
 }

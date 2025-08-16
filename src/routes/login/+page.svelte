@@ -1,21 +1,38 @@
 <script>
-import { auth, googleAuth } from "$lib/firebase";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { goto } from "$app/navigation";
+import { getFirebase } from "$lib/firebase.js";
+import { onMount } from "svelte";
 
 let email = $state('');
 let password = $state('');
 let isLogin = $state(true); 
 let errorMessage = $state(''); 
 
-async function handleSubmit() {
+let auth, googleProvider;
+let isFirebaseReady = $state(false);
+
+onMount(async () => {
+  const firebase = await getFirebase();
+  auth = firebase.auth;
+  googleProvider = firebase.googleProvider;
+  isFirebaseReady = true; 
+});
+
+async function handleSubmit(event) {
+  event.preventDefault(); 
+  if (!isFirebaseReady) return; 
+
   errorMessage = '';
   if (!email || !password) {
     errorMessage = "Please enter both email and password.";
     return;
   }
-
   try {
+    const { 
+      signInWithEmailAndPassword, 
+      createUserWithEmailAndPassword 
+    } = await import("firebase/auth");
+
     if (isLogin) {
       await signInWithEmailAndPassword(auth, email, password);
     } else {
@@ -42,8 +59,11 @@ async function handleSubmit() {
 }
 
 async function handleGoogleSignIn() {
+  if (!isFirebaseReady) return;
   try {
-    await signInWithPopup(auth, googleAuth);
+   const { signInWithPopup } = await import("firebase/auth");
+
+    await signInWithPopup(auth, googleProvider);
     goto("/");
   } catch (error) {
     console.error("Google sign-in error:", error);
@@ -55,7 +75,7 @@ async function handleGoogleSignIn() {
 <main class="auth-container">
   <h1>{isLogin ? "Welcome Back!" : "Create an Account"}</h1>
 
-  <button class="google-btn" onclick={handleGoogleSignIn}>
+  <button class="google-btn" onclick={handleGoogleSignIn} disabled={!isFirebaseReady} >
     <md-ripple></md-ripple>
     <img src="/google-logo.svg" alt="Google logo" /> 
     Continue with Google
@@ -82,7 +102,15 @@ async function handleGoogleSignIn() {
         <p class="error-message">{errorMessage}</p>
       {/if}
 
-      <md-filled-button type="submit">{isLogin ? 'Log In' : 'Sign Up'}</md-filled-button>
+      <md-filled-button type="submit" disabled={!isFirebaseReady}>
+        {#if !isFirebaseReady}
+          Loading...
+        {:else if isLogin}
+          Log In
+        {:else}
+          Sign Up
+        {/if}
+      </md-filled-button>
     </form>
   </div>
 

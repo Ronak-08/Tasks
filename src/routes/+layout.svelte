@@ -1,9 +1,10 @@
 <script>
 import "../app.css";
 import { fade,slide } from "svelte/transition";
-import { auth } from "$lib/firebase.js";
-import { signOut } from "firebase/auth";
+// import { auth } from "$lib/firebase.js";
+// import { signOut } from "firebase/auth";
 import { breakpoints } from "$lib/breakpoints.js";
+import { getFirebase } from "$lib/firebase.js";
 import { page } from "$app/stores";
 import { goto } from "$app/navigation";
 import { onMount } from "svelte";
@@ -12,9 +13,14 @@ import { clearTasks } from "$lib/taskStore.js";
 import { initializeAuth } from "$lib/userStore.js";
 import { browser } from "$app/environment";
 import { user } from "$lib/userStore.js";
-import "@material/web/all.js";
+import "@material/web/common.js";
+import "@material/web/fab/fab.js";
+import "@material/web/button/filled-tonal-button.js"
+import "@material/web/iconbutton/outlined-icon-button.js";
+import "@material/web/iconbutton/filled-tonal-icon-button.js";
 
 let path = $derived($page.url.pathname);
+$effect(() =>  console.log("Current user store state:", $user));
 let { children } = $props();
 let showWelcome = $state(false);
 
@@ -26,10 +32,8 @@ onMount(() => {
   if (browser && 'serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
       .then(registration => {
-        console.log('Service Worker registered with scope:', registration.scope);
       })
       .catch(error => {
-        console.error('Service Worker registration failed:', error);
       });
   }
 });
@@ -37,11 +41,13 @@ function dismissWelcome() {
   showWelcome = false;
   localStorage.setItem("welcomeDismissed", "true");
 }
-onMount(() => {
+onMount(async() => {
   initializeAuth();
+  const { auth, db } = await getFirebase(); 
 });
 
 async function handleLogout() {
+  const { signOut } = await import('firebase/auth');
   await signOut(auth);
   clearNotes();
   clearTasks();

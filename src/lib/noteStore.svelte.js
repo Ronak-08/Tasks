@@ -1,9 +1,9 @@
 import { browser } from "$app/environment";
 import {user} from '$lib/userStore.js';
-import { setDoc,query,getDocs,doc,collection, updateDoc, writeBatch,deleteDoc } from "firebase/firestore";
+// import { setDoc,query,getDocs,doc,collection, updateDoc, writeBatch,deleteDoc } from "firebase/firestore";
 import { get } from "svelte/store";
-import { db } from "./firebase";
-import { saveState } from "./pomodoroStore.svelte";
+// import { db } from "./firebase";
+import { getFirebase } from "$lib/firebase.js";
 
 
 export const notes = $state([]);
@@ -48,12 +48,14 @@ const savePendingChanges = (change) => {
   pendingChanges.push(change);
   localStorage.setItem("pending", JSON.stringify(pendingChanges));
   
-  console.log("Change queued! Current pending changes:", pendingChanges.length);
 };
 
 // --------------------------------
 
 export const addNote = async (title,content) => {
+  const { db } = await getFirebase();
+  const { doc,setDoc } = await import('firebase/firestore');
+
   const newNote = {
     title,
     content,
@@ -87,6 +89,9 @@ export const updateNote = async (id, title, content) => {
 
   notes[index] = { ...notes[index], ...updatedFields };
   saveNotes();
+  const { db } = await getFirebase();
+  const { doc,updateDoc } = await import('firebase/firestore');
+
   
   const currentUser = get(user);
   if (currentUser) {
@@ -112,6 +117,9 @@ export const deleteNote = async (id) => {
     saveNotes();
   }
   const currentUser = get(user);
+  const { db } = await getFirebase();
+  const { doc,deleteDoc } = await import('firebase/firestore');
+
 
   if (currentUser) {
     try { 
@@ -128,6 +136,9 @@ export const deleteMultipleNotes = async (idsToDelete) => {
   const newNotes = notes.filter(note => !idsToDelete.includes(note.id));
   notes.splice(0, notes.length, ...newNotes);
   saveNotes();
+
+  const { db } = await getFirebase();
+  const { doc,writeBatch } = await import('firebase/firestore');
 
   const currentUser = get(user);
   if (currentUser) {
@@ -151,6 +162,9 @@ export const deleteMultipleNotes = async (idsToDelete) => {
 
 export const syncNotes = async () => {
   const currentUser = get(user);
+  const { db } = await getFirebase();
+  const { doc,writeBatch,getDocs,collection } = await import('firebase/firestore');
+
   if (!navigator.onLine || !currentUser) {
     return; 
   }
@@ -200,7 +214,6 @@ try {
   });
   notes.splice(0, notes.length, ...mergedNotes);
   saveNotes();
-  console.log("Sync complete. Notes merged successfully.");
 } catch (e) {
   console.error("Failed to sync notes:", e);
 }};
