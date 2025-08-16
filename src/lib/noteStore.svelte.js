@@ -70,7 +70,6 @@ export const addNote = async (title,content) => {
       const noteRef = doc(db, 'users', currentUser.uid, 'notes', newNote.id);
       await setDoc(noteRef, newNote);
     } catch (error) {
-      console.log("Error:", error)
       savePendingChanges({type: 'add', payload: newNote});
     }
   }   
@@ -150,7 +149,6 @@ export const deleteMultipleNotes = async (idsToDelete) => {
       });
       await batch.commit();
     } catch (e) {
-      console.log('Batch delete failed, queueing individual deletes:', e);
         savePendingChanges({ type: 'deletes', payload: { id: idsToDelete } });
     }
   }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'task-master-cache-v1';
+const CACHE_NAME = 'task-master-cache-v2';
 const urlsToCache = [
   '/',
   '/notes',

@@ -20,7 +20,6 @@ import "@material/web/iconbutton/outlined-icon-button.js";
 import "@material/web/iconbutton/filled-tonal-icon-button.js";
 
 let path = $derived($page.url.pathname);
-$effect(() =>  console.log("Current user store state:", $user));
 let { children } = $props();
 let showWelcome = $state(false);
 

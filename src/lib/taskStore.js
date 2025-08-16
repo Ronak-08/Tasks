@@ -201,7 +201,6 @@ export async function syncTasksWithDb() {
       }
       await batch.commit();
     } else {
-      console.log("No local changes to sync.");
     }
 
     const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'tasks'));
@@ -211,7 +210,6 @@ export async function syncTasksWithDb() {
       tasks.set(remoteTasks);
       saveToLocalStorage();
     } else {
-      console.log("No changes from Firestore.");
     }
     
     if (hasPendingDeletions) {
