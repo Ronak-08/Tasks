@@ -425,18 +425,22 @@
   }
    .ongoingList button {
     width: 100%;
+    max-width: 50%;
     text-align: left;
   }
   .wrap-text {
     display: flex;
     flex-direction: column;
-    max-width: 70%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    max-width: 80%;
+    width: 100%;
   }
+  .wrap-text > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
   .title {
-    font-size: 0.96rem;
+    font-size: 0.95rem;
   }
   .desc {
     font-size: 0.78rem;
@@ -551,6 +555,10 @@
       top: 0;
       margin-left: 0.5rem;
       position: relative;
+    }
+   .ongoingList button {
+      max-width: 70%;
+      width: 100%;
     }
 
   .NotFound,

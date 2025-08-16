@@ -7,10 +7,10 @@ import {
   deleteNote,
   filteredNotes,
   loadNotes,
+  searchQuery,
 } from "$lib/noteStore.svelte.js";
 import Modal from "$lib/components/Modal.svelte";
 import { fade,slide } from "svelte/transition";
-import { searchQuery  } from "$lib/noteStore.svelte.js";
 import { browser } from '$app/environment';
 import { onMount } from "svelte";
 
@@ -24,6 +24,7 @@ let selected = $state([]);
 let isSelectionMode = $derived(selected.length > 0);
 let readMode = $state(false);
 let displayedNotes = $derived(filteredNotes());
+let markdownInitialized = $state(false);
 
 let holdTimer = null;
 const HOLD_DURATION = 800;
@@ -59,21 +60,28 @@ function cancelSelection() {
 }
 
 $effect(() => {
-  const currentContent = noteContent;
+  if (!browser) return;
   const renderMarkdown = async () => {
-      if (!browser) return;
-      try {
-        const { marked } = await import('marked');
-        const DOMPurify = (await import('dompurify')).default;
-        const dirtyHtml = marked.parse(currentContent || '');
-        renderedHtml = DOMPurify.sanitize(dirtyHtml);
-      } catch (error) {
-        console.error("Failed to render markdown:", error);
-        renderedHtml = '<p>Sorry, there was an error rendering this note.</p>';
+    try {
+      if (!markdownInitialized) {
+        const [{ marked }, DOMPurify] = await Promise.all([
+          import('marked'),
+          import('dompurify').then(m => m.default)
+        ]);
+        marked.setOptions({ gfm: true });
+        window.marked = marked;
+        window.DOMPurify = DOMPurify; 
+        markdownInitialized = true;
       }
-    };
-    renderMarkdown();
-})
+      const dirtyHtml = window.marked.parse(noteContent || '');
+      renderedHtml = window.DOMPurify.sanitize(dirtyHtml);
+    } catch (error) {
+      console.error("Markdown error:", error);
+      renderedHtml = '<p>Error rendering note</p>';
+    }
+  };
+  renderMarkdown();
+});
 
 function openModal(note = null) {
   if (note) {
@@ -119,7 +127,6 @@ function handleSubmit() {
 }
 onMount(() => {
   loadNotes();
-  marked.setOptions({ gfm: true });
 });
 </script>
 

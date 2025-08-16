@@ -54,7 +54,7 @@ const savePendingChanges = (change) => {
 export const addNote = async (title,content) => {
   const { db } = await getFirebase();
   const { doc,setDoc } = await import('firebase/firestore');
-
+  if(!db || !doc || !setDoc) console.error("error")
   const newNote = {
     title,
     content,

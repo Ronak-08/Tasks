@@ -1,62 +1,65 @@
 <script>
-import "../app.css";
-import { fade,slide } from "svelte/transition";
-import { breakpoints } from "$lib/breakpoints.js";
-import { getFirebase } from "$lib/firebase.js";
-import { page } from "$app/stores";
-import { goto } from "$app/navigation";
-import { onMount } from "svelte";
-import { clearNotes } from "$lib/noteStore.svelte.js";
-import { clearTasks } from "$lib/taskStore.js";
-import { initializeAuth } from "$lib/userStore.js";
-import { browser } from "$app/environment";
-import { user } from "$lib/userStore.js";
-import "@material/web/common.js";
-import "@material/web/fab/fab.js";
-import "@material/web/button/filled-tonal-button.js"
-import "@material/web/iconbutton/outlined-icon-button.js";
-import "@material/web/iconbutton/filled-tonal-icon-button.js";
+  import "../app.css";
+  import { onMount } from "svelte";
+  import { browser } from "$app/environment";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+  import { fade, slide } from "svelte/transition";
+  import { breakpoints } from "$lib/breakpoints.js";
+  import { user, initializeAuth } from "$lib/userStore.js";
+  import { clearNotes } from "$lib/noteStore.svelte.js";
+  import { clearTasks } from "$lib/taskStore.js";
 
-let path = $derived($page.url.pathname);
-let { children } = $props();
-let showWelcome = $state(false);
+  let { children } = $props();
+  let path = $derived($page.url.pathname);
+  let showWelcome = $state(false);
+  let showParagraph = $state(false);
 
-onMount(() => {
-  const stored = localStorage.getItem("welcomeDismissed");
-  if (stored !== "true") {
-    showWelcome = true;
-  }
-  if (browser && 'serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-      })
-      .catch(error => {
+  onMount(() => {
+    import("@material/web/common.js");
+    import("@material/web/fab/fab.js");
+    import("@material/web/button/filled-tonal-button.js");
+    import("@material/web/iconbutton/outlined-icon-button.js");
+    import("@material/web/iconbutton/filled-tonal-icon-button.js");
+
+    const stored = localStorage.getItem("welcomeDismissed");
+    if (stored !== "true") {
+      showWelcome = true;
+    }
+
+    if (browser && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js').catch(error => {
         console.error("Service Worker registration failed:", error);
       });
+    }
+
+    initializeAuth();
+  });
+
+  function dismissWelcome() {
+    showWelcome = false;
+    localStorage.setItem("welcomeDismissed", "true");
   }
-});
-function dismissWelcome() {
-  showWelcome = false;
-  localStorage.setItem("welcomeDismissed", "true");
-}
-onMount(async() => {
-  initializeAuth();
-  const { auth, db } = await getFirebase(); 
-});
+  async function handleLogout() {
+    try {
+      const { getFirebase } = await import('$lib/firebase.js');
+      const { signOut } = await import('firebase/auth');
+      const { auth } = await getFirebase();
+      
+      await signOut(auth);
+      
+      clearNotes();
+      clearTasks();
+      showParagraph = false; 
+      goto("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  }
 
-async function handleLogout() {
-  const { signOut } = await import('firebase/auth');
-  await signOut(auth);
-  clearNotes();
-  clearTasks();
-  goto("/");
-}
-
-let showParagraph = $state(false);
-
-function toggleParagraph() {
-  showParagraph = !showParagraph;
-}
+  function toggleParagraph() {
+    showParagraph = !showParagraph;
+  }
 </script>
 
 {#if showWelcome}
