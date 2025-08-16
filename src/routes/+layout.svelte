@@ -77,13 +77,13 @@ function toggleParagraph() {
       <div></div>
     </div>
 
-    <md-filled-icon-button
+    <md-filled-button
       role="button"
       class="getStarted"
       onclick={dismissWelcome}
     >
       <md-icon class="material-symbols-rounded"> arrow_right_alt </md-icon>
-    </md-filled-icon-button>
+    </md-filled-button>
   </div>
 {/if}
 

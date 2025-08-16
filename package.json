@@ -18,12 +18,9 @@
     "vite": "latest"
   }, 
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "@material/web": "^2.3.0",
-    "@thisux/sveltednd": "^0.0.20",
     "dompurify": "^3.2.6",
     "firebase": "^11.9.1",
-    "marked": "^16.0.0",
-    "svelte-dnd-action": "^0.9.61"
+    "marked": "^16.0.0"
   }
 }

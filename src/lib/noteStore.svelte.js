@@ -46,8 +46,7 @@ const savePendingChanges = (change) => {
   if (!browser) return;
   const pendingChanges = JSON.parse(localStorage.getItem("pending") || "[]");
   pendingChanges.push(change);
-  localStorage.setItem("pending", JSON.stringify(pendingChanges));
-  
+  localStorage.setItem("pending", JSON.stringify(pendingChanges)); 
 };
 
 // --------------------------------
