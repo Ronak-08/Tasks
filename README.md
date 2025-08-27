@@ -1,43 +1,54 @@
-<<<<<<< HEAD
-# sv
+# Task Master 📝
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A simple and fast app to manage your notes, tasks, and focus time, all in one place. Built with the latest web tech to be reliable and easy to use.
 
-## Creating a project
+**Live Demo:** [**https://tasksmaster01.netlify.app**](https://tasksmaster01.netlify.app)
 
-If you're seeing this, you've probably already done this step. Congrats!
+---
 
-```bash
-# create a new project in the current directory
-npx sv create
+### ✨ Features
 
-# create a new project in my-app
-npx sv create my-app
-```
+*   **📝 Markdown Notes:** Write rich notes with a secure, real-time markdown preview.
+*   **✅ Simple Todos:** Keep track of your tasks and check them off as you go.
+*   **🍅 Pomodoro Timer:** Stay focused and manage your work sessions effectively.
+*   **☁️ Firebase Sync:** Your data is always synced across all your devices (optional, can work without it).
+*   **✈️ Offline Support:** Keep working even when the internet isn't. The app saves your changes locally and syncs when you're back online.
+*   **📱 PWA Ready:** Install it on your phone or desktop for a native app-like experience.
 
-## Developing
+---
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### 🛠️ Tech Stack
 
-```bash
-npm run dev
+*   **Framework:** **Svelte 5**
+*   **UI:** **Google's Material Web Components** for a clean, modern look.
+*   **Backend & Sync:** **Firebase** (Firestore & Authentication).
+*   **Markdown:** `marked` for parsing and `DOMPurify` for keeping things secure.
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
+---
 
-## Building
+### 🚀 Getting Started
 
-To create a production version of your app:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/your-repo-name.git
+    cd your-repo-name
+    ```
 
-```bash
-npm run build
-```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
-You can preview the production build with `npm run preview`.
+3.  **Set up Firebase:**
+    *   Create a project on [Firebase](https://firebase.google.com/).
+    *   Create a `src/lib/firebase.js` file with your Firebase config.
+    *   Enable Firestore and Authentication.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
-=======
-# Tasks
-A tasks + notes + pomodoro app built with sveltekit and firbase, using material ui
->>>>>>> 6bca3a8ff97fb01ddd76e5b78eb92f3ce0a5ae19
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+
+---
+
+Made with ❤️ by **Ronak Ameta**.
