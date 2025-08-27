@@ -30,8 +30,8 @@ A simple and fast app to manage your notes, tasks, and focus time, all in one pl
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/your-repo-name.git
-    cd your-repo-name
+    git clone https://github.com/Ronak-08/Tasks.git
+    cd Tasks
     ```
 
 2.  **Install dependencies:**
