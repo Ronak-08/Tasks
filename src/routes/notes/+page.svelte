@@ -1,512 +1,549 @@
 <script>
 import {
   notes,
-  deleteMultipleNotes,
-  addNote,
-  updateNote,
-  deleteNote,
   filteredNotes,
   loadNotes,
   searchQuery,
+  sortBy,
+  selectedTags,
+  allTags,
+  exportAllNotes,
+  saveAndsetNotes,
+  deleteMultipleNotes,
+  deleteNote,
 } from "$lib/noteStore.svelte.js";
-import Modal from "$lib/components/Modal.svelte";
-import { fade,slide } from "svelte/transition";
-import { browser } from '$app/environment';
 import { onMount } from "svelte";
+import { fade, fly } from "svelte/transition";
+import NotePad from "$lib/components/notePad.svelte";
+import Modal from "$lib/components/Modal.svelte";
 
-let showModal = $state(false);
-let renderedHtml = $state('<p>Loading note...</p>');
-let editingNote = $state(null);
+const displayedNotes = $derived(filteredNotes());
+let open = $state(false);
+let selectedNotes = $state([]);
 let noteTitle = $state("");
 let noteContent = $state("");
-let originalNoteState = $state({ title: "", content: "" });
-let selected = $state([]);
-let isSelectionMode = $derived(selected.length > 0);
-let readMode = $state(false);
-let displayedNotes = $derived(filteredNotes());
-let markdownInitialized = $state(false);
+let selectionMode = $state(false);
+let selectedNoteIds = $state([]);
+let tags = $state([]);
+let noteId = $state(null);
+let show = $state(false);
+let showSettings = $state(false);
+let fileInput;
 
-let holdTimer = null;
-const HOLD_DURATION = 800;
+async function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) {
+    alert("No file selected.");
+    return;
+  }
 
-function handleHoldStart(noteId) {
-  holdTimer = setTimeout(() => {
-    selected = [noteId]; 
-  }, HOLD_DURATION);
-}
+  const reader = new FileReader();
 
-function handleHoldEnd() {
-  clearTimeout(holdTimer);
-}
-function handleNoteClick(note) {
-  if (isSelectionMode) {
-    if (selected.includes(note.id)) {
-      selected = selected.filter(id => id !== note.id);
-    } else {
-      selected = [...selected, note.id];
+  reader.onload = (e) => {
+    try {
+      const { notes } = JSON.parse(e.target.result);
+      if (!notes || typeof notes !== "object")
+        throw new Error("Invalid backup: missing 'notes'");
+
+      const notesArray = Object.values(notes);
+      saveAndsetNotes(notesArray);
+      alert(`Imported ${notesArray.length} notes!`);
+    } catch (error) {
+      console.error("Import failed:", error);
+      alert(`Import failed: ${error.message}`);
+    } finally {
+      fileInput.value = "";
     }
+  };
+  reader.onerror = () => {
+    alert("Error reading file");
+    fileInput.value = "";
+  };
+
+  reader.readAsText(file);
+}
+
+function handleNewNote() {
+  noteTitle = "";
+  noteContent = "";
+  tags = [];
+  noteId = null;
+  open = true;
+}
+
+function handleNote(note) {
+  noteTitle = note.title;
+  noteContent = note.content;
+  tags = note.tags ?? [];
+  noteId = note.id;
+  open = true;
+}
+
+function handleDelete(noteId,event) {
+  event.stopPropagation();
+  if (confirm('Are you sure you want to delete this note?')) {
+    deleteNote(noteId);
+  }
+}
+
+function toggleNoteSelection(noteId) {
+  const index = selectedNoteIds.indexOf(noteId);
+  if (index > -1) {
+    selectedNoteIds.splice(index, 1);
   } else {
-    openModal(note);
+    selectedNoteIds.push(noteId);
   }
 }
-function deleteSelectedNotes() {
-  if (confirm(`Delete ${selected.length} selected notes?`)) {
-    deleteMultipleNotes(selected);
-    selected = []; 
+
+function handleNoteClick(note) {
+  if(selectionMode) {
+    toggleNoteSelection(note.id)
+  } else {
+    handleNote(note);
   }
 }
-function cancelSelection() {
-  selected = [];
+
+let pressTimer = null;
+
+function handlePressStart(note) {
+  pressTimer = setTimeout(() => {
+    selectionMode = true;
+    toggleNoteSelection(note.id);
+  }, 500);
+}
+
+function handlePressEnd() {
+  clearTimeout(pressTimer);
+}
+
+function handleDeleteSelected() {
+  if (confirm(`Are you sure you want to delete ${selectedNoteIds.length} notes?`)) {
+    deleteMultipleNotes(selectedNoteIds);
+    selectionMode = false;
+    selectedNoteIds = [];
+  }
+}
+
+function toggleSelectAll() {
+  if (selectedNoteIds.length === displayedNotes.length) {
+    selectedNoteIds = [];
+  } else {
+    selectedNoteIds = displayedNotes.map(note => note.id);
+  }
 }
 
 $effect(() => {
-  if (!browser) return;
-  const renderMarkdown = async () => {
-    try {
-      if (!markdownInitialized) {
-        const [{ marked }, DOMPurify] = await Promise.all([
-          import('marked'),
-          import('dompurify').then(m => m.default)
-        ]);
-        marked.setOptions({ gfm: true });
-        window.marked = marked;
-        window.DOMPurify = DOMPurify; 
-        markdownInitialized = true;
-      }
-      const dirtyHtml = window.marked.parse(noteContent || '');
-      renderedHtml = window.DOMPurify.sanitize(dirtyHtml);
-    } catch (error) {
-      console.error("Markdown error:", error);
-      renderedHtml = '<p>Error rendering note</p>';
-    }
-  };
-  renderMarkdown();
+  if (selectedNoteIds.length === 0 && selectionMode) {
+    cancelSelection();
+  }
 });
 
-function openModal(note = null) {
-  if (note) {
-    editingNote = note;
-    noteTitle = note.title;
-    noteContent = note.content;
-    originalNoteState = { title: note.title, content: note.content };
-  } else {
-    editingNote = null;
-    noteTitle = "";
-    noteContent = "";
-    originalNoteState = { title: "", content: "" };
-  }
-  readMode = false;
-  showModal = true;
+function cancelSelection() {
+  selectionMode = false;
+  selectedNoteIds = [];
 }
 
-function handleSubmit() {
-  const isTitleEmpty = !noteTitle.trim();
-  const isContentEmpty = !noteContent.trim();
-
-  if (isTitleEmpty && isContentEmpty) {
-    showModal = false;
-    return;
-  }
-  if (isTitleEmpty) {
-    alert("Title cannot be empty.");
-    return;
-  }
-  if (editingNote) {
-    const hasChanged =
-      noteTitle !== originalNoteState.title ||
-        noteContent !== originalNoteState.content;
-
-    if (hasChanged) {
-      updateNote(editingNote.id, noteTitle, noteContent);
-    } else {
-    }
-  } else {
-    addNote(noteTitle, noteContent);
-  }
-  showModal = false;
-}
 onMount(() => {
   loadNotes();
 });
 </script>
 
-<div class="header">
+<!-- ------------------- -->
+
+<div class="notesHeader">
   <md-fab
-  class="plus"
-  onclick={() => openModal()}
-  variant="primary"
   role="button"
+  onclick={handleNewNote}
+  class="fab"
+  variant="primary"
   label="New Note"
+  aria-label="Edit"
 >
-  <md-icon class="material-symbols-rounded" slot="icon">edit</md-icon>
+  <md-icon style="margin-right: 6px;" class="material-symbols-rounded" slot="icon">edit</md-icon>
 </md-fab>
 
   <input
-    class="search"
     type="text"
-    placeholder="Search"
+    placeholder="Search Notes..."
     bind:value={searchQuery.query}
-    oninput={(event) => event.currentTarget.value}
+    class="search"
   />
+
+  <md-filled-tonal-icon-button onclick={() => {showSettings = !showSettings}}>
+    <span class="material-symbols-rounded">
+settings
+</span>
+  </md-filled-tonal-icon-button>
+  <md-filled-tonal-icon-button onclick={() => {show = !show}}>
+    <span class="material-symbols-rounded">
+filter_alt
+</span>
+  </md-filled-tonal-icon-button>
 </div>
 
-{#if isSelectionMode}
-  <div class="selection-action-bar" transition:slide>
-    <div class="selection-info">
-      <button class="icon-button" onclick={cancelSelection} aria-label="Cancel selection">
-        <md-icon class="material-symbols-rounded">close</md-icon>
+{#if displayedNotes.length}
+<div class="notes-grid">
+  {#each displayedNotes as note (note.id)}
+    <div class="note-card" transition:fade={{duration: 200}} class:selected={selectedNoteIds.includes(note.id)} role="button" onclick={() => handleNoteClick(note)}
+      onmousedown={() => handlePressStart(note)}
+      onmouseup={handlePressEnd}
+      onmouseleave={handlePressEnd}
+      ontouchstart={() => handlePressStart(note)}
+      ontouchend={handlePressEnd}>
+      <md-ripple></md-ripple>
+      <h4 class="note-title" >{note.title}</h4>
+
+      {#if !selectionMode}
+      <button class="deleteBtn" onclick={() => handleDelete(note.id,event)}>
+        <span class="material-symbols-rounded">
+          delete
+        </span>
       </button>
-      <span>{selected.length} selected</span>
+      {/if}
+      <p class="note-content">{note.content}</p>
     </div>
-    <div class="selection-actions">
-      <button class="icon-button" onclick={deleteSelectedNotes} aria-label="Delete selected notes">
-        <md-icon class="material-symbols-rounded">delete</md-icon>
-      </button>
+  {/each}
+</div>
+  {:else} 
+  <div class="noNote">No Note Found.</div>
+{/if}
+
+
+
+<NotePad bind:noteTitle bind:noteContent bind:tags bind:noteId bind:open />
+
+{#if show}
+  <div in:fly={{ y: 100, duration: 200 }}
+    out:fly={{ y: 100, duration: 200 }} class="hiddenContainer">
+
+    <div class="head">
+      <h2>Filter</h2>
+      <md-outlined-icon-button onclick={() => {show = false}}>
+       <md-icon  class="material-symbols-rounded">close</md-icon> 
+      </md-outlined-icon-button>
     </div>
+
+    <div class="sort-wrap">
+    <label for="sort">Sort By</label>
+    <select id="sort" bind:value={sortBy.recent}>
+      <option value="recent">Recent first</option>
+      <option value="oldest">Oldest first</option>
+    </select>
+  </div>
+
+    <div class="filter-tag">
+      <p>Filter by tags</p>
+    <md-chip-set class="chip-set">
+      {#each allTags() as ta}
+        <md-filter-chip
+          onclick={() =>
+            (selectedTags.selected = selectedTags.selected.includes(ta)
+              ? selectedTags.selected.filter((t) => t !== ta)
+              : [...selectedTags.selected, ta])}
+            selected={selectedTags.selected.includes(ta)}
+          role="button"
+          type="button"
+        >
+          {ta}
+        </md-filter-chip>
+      {/each}
+    </md-chip-set>
+  </div>
   </div>
 {/if}
 
-<Modal open={showModal} onclose={() => (showModal = false)}>
-  <form onsubmit={handleSubmit} onclick={(e) => e.stopPropagation()}>
+{#if selectionMode}
+  <div class="selection-bar" transition:fly={{ y: 20, duration: 300 }}>
+    <div class="selection-actions-left">
+      <md-text-button onclick={cancelSelection}>
+        Cancel
+      </md-text-button>
 
-    <div class="headNote">
-      <md-outlined-icon-button
-        type="button"
-        onclick={handleSubmit}
-        role="button"
-      >
-        <md-icon class="material-symbols-rounded">arrow_back</md-icon>
-      </md-outlined-icon-button>
-      <input
-        type="text"
-        bind:value={noteTitle}
-        maxlength="300"
-        required
-        class="note-title"
-        placeholder="Note Title"
-      />
-      <button
-        class="ai"
-        type="button"
-        onclick={() => {
-          readMode = !readMode;
-        }}
-      >
+      <md-filled-tonal-icon-button onclick={toggleSelectAll}>
         <md-icon class="material-symbols-rounded">
-          {readMode ? "edit_note" : "visibility"}
-        </md-icon>
-      </button>
-    </div>
-      {#if readMode}
-        <div class="markdown-preview">
-          {@html renderedHtml}
-        </div>
-      {:else}
-        <textarea
-          bind:value={noteContent}
-          class="note-content"
-          placeholder="Write your note here..."
-        ></textarea>
-      {/if}
-    </form>
-  </Modal>
-
-<div class="notes-container" class:selection-active={isSelectionMode}>
-  <div class="notes-grid">
-    {#if displayedNotes.length > 0}
-      {#each displayedNotes as note (note.id)}
-        <div
-          role="button"
-          tabindex="0"
-          class="note-card"
-          class:selected={selected.includes(note.id)}
-          onclick={() => handleNoteClick(note)}
-          onmousedown={() => handleHoldStart(note.id)}
-          onmouseup={handleHoldEnd}
-          onmouseleave={handleHoldEnd}
-          ontouchstart={() => handleHoldStart(note.id)}
-          ontouchend={handleHoldEnd}
-          transition:fade={{ duration: 200 }}
-          title="Click to edit"
-        >
-          <md-ripple></md-ripple>
-          <button
-            class="delete-btn"
-            onclick={(e) => { e.stopPropagation(); if (confirm("Delete this note?")) deleteNote(note.id);}}
-            title="Delete note"
-          >
-            <md-icon class="material-symbols-rounded">delete</md-icon>
-          </button>
-
-          {#if selected.includes(note.id)}
-            <div class="selection-checkbox" transition:fade>
-              <md-icon class="material-symbols-rounded">check_circle</md-icon>
-            </div>
+          {#if selectedNoteIds.length === displayedNotes.length}
+            deselect
+          {:else}
+            select_all
           {/if}
+        </md-icon>
+      </md-filled-tonal-icon-button>
+    </div>
 
-          <h3>{note.title}</h3>
-          <p>{note.content}</p>
-        </div>
-      {/each}
-    {:else if searchQuery.query.trim() !== ""}
-      <p class="warning">No matching Notes found.</p>
-    {:else}
-      <p class="warning">No notes yet. Add one!</p>
-    {/if}
+    <span class="selection-count">
+      {selectedNoteIds.length} selected
+    </span>
+
+    <button class="delete-selected-btn" onclick={handleDeleteSelected}>
+      <md-icon class="material-symbols-rounded">delete</md-icon>
+    </button>
   </div>
+{/if}
+
+<Modal open={showSettings}>
+  <div class="wrap">
+    <div class="head">
+ <md-outlined-icon-button onclick={() => {showSettings = false}}>
+    <md-icon class="material-symbols-rounded">close</md-icon>
+  </md-outlined-icon-button>
+      <h2>Settings</h2>
+      </div>
+
+  <div class="export-section" onclick={exportAllNotes} >
+      <md-ripple></md-ripple>
+      <md-icon class="material-symbols-rounded">export_notes</md-icon>
+    <p>Export notes</p>
+  </div>
+
+<div class="import-section">
+      <md-icon class="material-symbols-rounded">download</md-icon>
+  <input
+    type="file"
+    accept="application/json,.json"
+    bind:this={fileInput}
+    onchange={handleFileSelect}
+    style="display: none;"
+  />
+  <button type="button" onclick={() => fileInput.click()}>
+    Import from Backup
+  </button>
 </div>
+    </div>
+</Modal>
+
+<!-- ------------------- -->
 
 <style>
-.header {
+.notesHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin: 1.1rem var(--space-medium);
-  position: sticky;
-  top: 0;
-  z-index:5;
-  padding: var(--space-small);
-  margin-bottom: var(--space-medium);
-}
-.notes-container {
-  overflow: auto;
-  height: 58vh;
-}
-.notes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 0.7rem;
-  margin: var(--space-large);
+  gap: 10px;
+  margin: var(--space-small);
   padding: var(--space-small);
 }
 
-.note-card {
-  position: relative;
-  border: 1.5px solid var(--md-sys-color-outline-variant);
-  color: var(--md-sys-color-on-surface);
-  background-color: var(--md-sys-color-surface-container-low);
-  max-height: 230px;
-  max-width: 100%;
+
+.hiddenContainer {
+  position: fixed;
+  bottom: 0;
   width: 100%;
+  height: 35vh;
+  z-index: 99;
+  color: var(--md-sys-color-on-surface-container);
+  background-color: var(--md-sys-color-surface-container-high);
   padding: var(--space-medium);
-  border-radius: 13px;
+  box-shadow: 0 -3px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px 12px 0 0;
+}
+.hiddenContainer .head {
+  display: flex;
+  justify-content: space-between;
+  margin: 16px 10px 30px 10px;
+}
+.hiddenContainer select {
+  background-color: var(--md-sys-color-surface-container-lowest);
+  border-radius: 12px;
+  padding: var(--space-small);
+}
+.hiddenContainer .sort-wrap {
+  display: flex;
+  align-items: center;
+  margin: 0.8rem;
+  padding: 0.5rem;
+  justify-content: space-between;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 16px;
+  font-size: 0.9rem;
+}
+.hiddenContainer .filter-tag {
+  display: flex;
+  font-size: 0.9rem;
+  flex-direction: column;
+  margin: 0.7rem;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 16px;
+  padding: 0.6rem;
+}
+.chip-set {
+  margin: 1.2rem 0.6rem 0.6rem;
+}
+.filter-tag p {
+  margin: 0.3rem 0.6rem 0.4rem;
+}
+
+.fab {
+  position: fixed;
+  bottom: 10vh;
+  z-index: 9;
+  right: 1rem;
+}
+
+.search {
+  padding: var(--space-medium);
+  width: 85%;
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 52px;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  max-height: 55vh;
+  gap: 0.5rem;
+  overflow: auto;
+  padding: 0.8rem;
+  margin: var(--space-medium);
+}
+.note-card {
   -webkit-user-select: none;
-  -moz-user-select: none;    
-  -ms-user-select: none;     
-  user-select: none;      
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-.notes-container:not(.selection-active) .note-card:hover .delete-btn {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-.note-card h3 {
-  margin: 0 0 1.1rem;
-  font-size: 1.1rem;
-  font-weight: 500;
-  max-width: 78%;
-  flex-shrink: 0;
+  -moz-user-select: none;
+  -ms-user-select: none; 
+  user-select: none; 
+  background-color: var(--md-sys-color-surface-container);
+  padding: 1rem;
+  border-radius: 16px;
+  max-height: 200px;
+  position:relative;
+  border: 2px solid var(--md-sys-color-outline-variant);
   overflow: hidden;
+  transition: 0.2s all ease;
 }
-.note-card p {
-  font-size: 0.90rem;
-  font-weight: 400;
-  color: var(--md-sys-color-on-surface-variant);
-  margin: 0; 
+.note-card .note-title {
+  font-weight: 500;
+  margin-bottom: 1rem;
+  max-width: 65%;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.note-card .note-content {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--md-sys-color-on-surface-variant);
   display: -webkit-box;
-  -webkit-line-clamp: 5;
-  line-clamp: 5;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
   -webkit-box-orient: vertical;
-  line-height: 1.3em; 
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.delete-btn {
+
+.note-card .deleteBtn {
   position: absolute;
-  top: 18px;
   opacity: 0;
-  transform: scale(0.8);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  right: 21px;
-  background: none;
-  border: none;
-  font-size: 0.8rem;
-  color: var(--md-sys-color-secondary);
-  cursor: pointer;
+  transform: scale(0.7) translateY(-5px);
+  top: 15px;
+  right: 15px;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
-form {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  height: 100%;
+
+.note-card:hover .deleteBtn {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition-delay: 0.1s;
 }
-input {
-  outline: none;
+
+
+.note-card.selected {
+  border: 2px solid var(--md-sys-color-primary);
+  transform: scale(0.97);
 }
-.plus {
+
+.selection-bar {
   position: fixed;
-  z-index: 5;
-  box-shadow: 0px 2px 8px var(--md-sys-color-shadow);
-  bottom: 6rem;
-  right: 1.5rem;
-}
-.plus md-icon {
-  margin-right: 10px;
-}
-.headNote {
+  bottom: 2vh;
+  left: 50%;
+  width: clamp(300px, 80%, 500px);
+  transform: translateX(-50%);
   display: flex;
-  gap: 0.8rem;
-  margin: var(--space-medium);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 12px 24px;
+  border-radius: 28px;
+  box-shadow: 4px 4px 8px rgba(0,0,0,0.2);
+  z-index: 100;
+}
+
+.selection-count {
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
+
+.delete-selected-btn {
+  background-color: var(--md-sys-color-error);
+  color: var(--md-sys-color-on-error);
+  border-radius: 18px;
+  padding: 5px;
+  display: flex;
   align-items: center;
 }
-.note-title {
-  font-size: 1.3rem;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  transition: all 0.3s ease;
+
+.selection-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 16px; 
+  }
+
+.wrap {
+  margin:12px;
+}
+.export-section,.import-section {
+  display: flex;
+  position: relative;
+  border-radius: 16px;
   background-color: var(--md-sys-color-surface-container-high);
-  padding: var(--space-small);
-  text-align: center;
-  border-radius: 16px;
-  min-width: 20%;
-  font-weight: 600;
+  gap: 12px;
+  padding: var(--space-medium);
+  margin: var(--space-small);
+  margin-top: 3rem;
+  width: 95%;
+  align-items: center;
 }
-.note-title:focus {
-  border-color: var(--md-sys-color-outline);
+.import-section {
+  margin-top: 1rem;
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
 }
-:global(textarea.note-content) {
-  all: unset;
-  font-family: inherit;
-  font-size: 0.9rem;
+.head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
-textarea.note-content,.markdown-preview {
-  height: 100%;
-  padding: 2.0rem;
-  outline: none;
-  border: none;
-  word-break: break-word;
-  white-space: pre-wrap;
-  overflow-y: auto;
-  margin: 0.5rem;
-  border-radius: 16px;
-  background-color: var(--md-sys-color-surface-container);
-}
-.markdown-preview {
-  font-size: 0.9rem;
-}
-.warning {
+
+.noNote {
   position: absolute;
   top: 50%;
   left: 50%;
-  font-weight: 500;
-  transform: translate(-50%, -50%);
-  font-size: 1.1rem;
-  color: var(--md-sys-color-error);
+  transform: translate(-50%,-50%);
+  color: var(--md-sys-color-on-surface-variant);
 }
-.markdown-preview :global(h1),
-.markdown-preview :global(h2) {
-  padding-bottom: 1rem;
-}
-.markdown-preview :global(hr) {
-  margin:1rem 0 1.2rem 0;
-}
-.ai {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 36px;
-  margin-left: auto;
-  background-color: var(--md-sys-color-secondary);
-  color: var(--md-sys-color-on-secondary);
-  padding: var(--space-small);
-}
+/* responsive styles */
 
-.note-card.selected {
-  transform: scale(0.95);
-  border: 2px solid var(--md-sys-color-primary);
-  box-shadow: 0 0 0 2px var(--md-sys-color-primary);
-}
-
-.selection-checkbox {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  color: var(--md-sys-color-primary);
-  background-color: var(--md-sys-color-surface);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.selection-action-bar {
-  position: fixed;
-  bottom: 10vh;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--md-sys-color-surface-container);
-  color: var(--md-sys-color-primary);
-  border-radius: 16px;
-  padding: var(--space-medium);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: calc(100% - 48px);
-  max-width: 400px;
-  z-index: 10;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-.selection-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.selection-info md-icon {
-  vertical-align: middle;
-}
-.selection-actions md-icon {
-  vertical-align: middle;
-}
 
 @media (min-width: 768px) and (max-width: 1024px) {
-  .plus {
-    bottom: 2rem;
+ .fab {
+   bottom: 2vh;
+  } 
+  .hiddenContainer {
+    width: 50%;
+    left: 30%;
+    height: fit-content;
   }
-  .selection-action-bar {
-    position: fixed;
-    bottom: 2rem;
-  }
-  .notes-grid {
-    justify-content: left;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 220px));
-  }
-  .notes-container {
-    height: 70vh;
+  .export-section,.import-section {
+    width: 70%;
+    margin-left: 2rem;
   }
 }
-  @media (min-width: 1024px) {
-  textarea.note-content,.markdown-preview {
-    font-size: 1rem;
+@media (min-width: 1024px) {
+  .fab {
+    position:static;
   }
-  .notes-grid {
-    justify-content: left;
-    grid-template-columns: repeat(auto-fit, minmax(250px,320px));
-  }
-  .selection-action-bar {
-    bottom: 24px;
-  }
-  .search {
-    width: 70%;
-  }
-  .plus {
-    position: static;
-  }
-  .header {
-    justify-content: left;
-    gap: 2rem;
+  .hiddenContainer {
+    width: 50%;
+    left: 30%;
+    height: fit-content;
   }
 }
 </style>

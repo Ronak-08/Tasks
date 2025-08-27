@@ -45,7 +45,7 @@ opacity: ${t};
     overflow-y: auto;
     color: var(--md-sys-color-on-surface);
     border-radius: 13px;
-    z-index: 20;
+    z-index: 100;
     width: 100dvw;
     transform-origin: 50% 50%;
   }

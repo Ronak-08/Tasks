@@ -114,6 +114,7 @@ ul, ol {
 table {
   border-collapse: collapse;
   width: 100%;
+   margin: 10px 0 10px 0;
 }
 .search {
   background-color: var(--md-sys-color-surface-container);

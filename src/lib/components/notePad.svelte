@@ -1,0 +1,314 @@
+<script>
+import { notes,addNote, updateNote } from "$lib/noteStore.svelte";
+import { fly, scale } from "svelte/transition";
+import { onMount } from "svelte";
+    import Modal from "./Modal.svelte";
+
+let {
+  open = $bindable(false),
+  noteTitle = $bindable(""),
+  noteContent = $bindable(""),
+  tags = $bindable([]),
+  noteId = null,
+} = $props();
+let tagInput = $state('');
+let markdownMode = $state(false);
+let marked = $state(null);
+let DOMPurify = $state(null);
+let showTagContainer = $state(false);
+
+
+onMount(async () => {
+  const markedModule = await import('marked');
+  marked = markedModule.marked;
+  const DOMPurifyModule = await import('dompurify');
+  DOMPurify = DOMPurifyModule.default;
+})
+
+let renderedHtml = $derived.by(() => {
+  if (markdownMode && open && marked && DOMPurify) {
+    return DOMPurify.sanitize(marked.parse(noteContent));
+  }
+  return ''; 
+});
+
+function handleSubmit(event) {
+  event.preventDefault();
+
+  if (!noteTitle.trim() && !noteContent.trim()) {
+    open = false;
+    return;
+  }
+
+  if (!noteTitle.trim()) {
+    alert("Please add a title!");
+    return;
+  }
+
+  if (noteId) {
+    const originalNote = notes.find(n => n.id === noteId);
+    const originalTags = [...(originalNote.tags ?? [])].sort();
+    const currentTags = [...tags].sort();
+    const hasChanged = originalNote.title !== noteTitle.trim() ||
+      originalNote.content !== noteContent.trim() ||
+      JSON.stringify(originalTags) !== JSON.stringify(currentTags);
+
+    if (hasChanged) {
+      updateNote(noteId, noteTitle, noteContent, tags);
+    }
+  } 
+  else {
+    addNote(noteTitle, noteContent, tags);
+  }
+  noteTitle = '';
+  noteContent = '';
+  tags = [];
+  open = false;
+}
+
+function handleTagInput(event) {
+  if (event.key === 'Enter' && tagInput.trim() !== '') {
+    event.preventDefault();
+    if (!tags.includes(tagInput.trim())) {
+      tags = [...tags, tagInput.trim()];
+    }
+    tagInput = '';
+  }
+}
+
+function removeTag(tagToRemove) {
+  tags = tags.filter(tag => tag !== tagToRemove);
+}
+
+
+</script>
+
+<!-- ------------------- -->
+
+{#if open}
+  <form class="note-pad" transition:scale onsubmit={handleSubmit}>
+    <div class="header">
+      <md-outlined-icon-button type="submit">
+        <md-icon class="material-symbols-rounded">arrow_back</md-icon>
+      </md-outlined-icon-button>
+      <input class="note-title" maxlength="100" placeholder="Note Title..." bind:value={noteTitle} type="text" />
+<button class="edit" type="button" onclick={() => (markdownMode = !markdownMode)}>
+        {#if markdownMode}
+          <md-icon class="material-symbols-rounded">visibility</md-icon>
+        {:else}
+          <md-icon class="material-symbols-rounded">edit</md-icon>
+        {/if}
+      </button>
+    </div>
+          <div class="tags">
+      {#each tags as tag (tag)}
+        <button transition:scale={{duration: 100}} type="button" class="tag" onclick={() => removeTag(tag)} >
+          {tag}
+        </button>
+      {/each}
+          <button type="button" class="showTag" onclick={() => {showTagContainer = !showTagContainer}}>
+        <md-icon class="material-symbols-rounded">add</md-icon>
+      </button>
+        </div>
+
+
+    <div class="text-wrap">
+      {#if markdownMode}
+        <div class="rendered-content">
+       {@html renderedHtml}
+        </div>
+      {:else}
+      <textarea name="note-pad" bind:value={noteContent}></textarea>
+        {/if}
+    </div>
+
+
+    {#if showTagContainer}
+      <div class="overlay"></div>
+   <div class="tags-container" in:fly={{ y: 100, duration: 200 }}
+    out:fly={{ y: 100, duration: 200 }} >
+      <input
+        class="tag-input"
+        type="text"
+        placeholder="Add a tag..."
+        bind:value={tagInput}  
+        onkeydown={handleTagInput}
+      />
+    </div>
+  {/if}
+
+  </form>
+{/if}
+
+<!-- ------------------- -->
+
+
+<style>
+.note-pad {
+  position: fixed;
+  background-color: var(--md-sys-color-surface-container);
+  z-index: 999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  padding: var(--space-small);
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+}
+.header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: var(--space-small);
+}
+.note-title {
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 16px;
+  padding: var(--space-small);
+  font-size: 1.2rem;
+  font-weight: 500;
+  width: fit-content;
+}
+.edit {
+background-color: var(--md-sys-color-primary);
+color: var(--md-sys-color-on-primary);
+  border-radius: 32px;
+  padding: var(--space-small);
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+.text-wrap {
+  /* border: 2px solid red; */
+  margin: 0.7rem;
+  height: 70vh;
+  border-radius: 16px;
+  overflow-y: auto;
+  color: var(--md-sys-color-on-surface-variant);
+  background-color: var(--md-sys-color-surface-container-high);
+}
+textarea {
+  width: 100%;
+  /* border: 2px solid red; */
+  height: 98%;
+  font-size: 0.9rem;
+  white-space: pre-wrap;
+  padding: 1rem; 
+  overflow-wrap: break-word;
+  resize: none;
+}
+
+.rendered-content {
+    padding: 1rem; 
+    font-size: 0.9rem;
+    word-wrap: break-word;
+  white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+:global(.rendered-content pre) {
+    white-space: pre-wrap;  
+    overflow-wrap: break-word;
+    padding: 1em;
+    border-radius: 4px;
+  }
+
+  :global(.rendered-content img) {
+    max-width: 100%;
+    height: auto; 
+  }
+
+  :global(.rendered-content table) {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto; 
+    display: block;
+  }
+
+.showTag {
+  display: flex;
+  z-index: 99;
+  align-items: center;
+  margin-left: 12px;
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 32px;
+  padding: 3px;
+}
+
+.tags-container {
+  display: flex;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 99;
+  flex-direction: column;
+  overflow-y: auto;
+  align-items: center;
+  gap: 10px;
+  margin: var(--space-small);
+  border-radius: 16px;
+  padding: var(--space-small);
+  background-color: var(--md-sys-color-surface-container-high);
+  box-shadow: 0px -0.5px 6px var(--md-sys-color-shadow);
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 98; 
+}
+.tags {
+  display: flex;
+  overflow-x: auto;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 16px;
+  max-width: 90vw;
+  gap: 5px;
+  margin: 1rem 0.8rem 0.7rem 0.8rem;
+  align-items: center;
+  padding: 4px;
+}
+.tags::-webkit-scrollbar {
+  display: none;
+}
+ .tag {
+  background-color: var(--md-sys-color-primary-container);
+  padding: 6px;
+  display: flex;
+  justify-content: center;
+  flex: 0 1 auto;
+  gap: 10px;
+  border-radius: 32px;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-primary-container);
+}
+.tag-input {
+  background-color: var(--md-sys-color-surface-container-highest);
+  padding: 7px;
+  border-radius: 32px;
+}
+
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .text-wrap {
+    height: 80vh;
+  }
+}
+@media (min-width: 1024px) {
+  .note-pad {
+    height: 90vh;
+    width: 31vw;
+    left: 68%;
+    box-shadow: -3px 2px 7px rgba(0, 0, 0,0.5);
+    top: 0;
+    transform: none;
+  }
+}
+</style>

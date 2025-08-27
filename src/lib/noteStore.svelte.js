@@ -1,10 +1,7 @@
 import { browser } from "$app/environment";
 import {user} from '$lib/userStore.js';
-// import { setDoc,query,getDocs,doc,collection, updateDoc, writeBatch,deleteDoc } from "firebase/firestore";
 import { get } from "svelte/store";
-// import { db } from "./firebase";
 import { getFirebase } from "$lib/firebase.js";
-
 
 export const notes = $state([]);
 export const searchQuery = $state({ query: "" });
@@ -17,7 +14,6 @@ const saveNotes = () => {
 export const loadNotes = () => {
   if (!browser) return;
   const savedNotes = JSON.parse(localStorage.getItem("notes") || "[]");
-
   notes.splice(0, notes.length, ...savedNotes);
 };
 
@@ -25,22 +21,93 @@ export const clearNotes = () => {
   notes.length = 0;
   if (browser) {
     localStorage.removeItem('notes');
-    localStorage.removeItem('lastSyncTimestamp');
   }
+}
+
+export function exportAllNotes() {
+  if (!browser) return false;
+  try {
+    const notes = JSON.parse(localStorage.getItem('notes') || '{}');
+    
+    const exportData = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      noteCount: Object.keys(notes).length,
+      notes
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    
+    a.href = url;
+    a.download = `notes-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 0);
+
+    return true;
+  } catch (error) {
+    console.error('Export failed:', error);
+    return false;
+  }
+}
+
+export function saveAndsetNotes(notesArray) {
+  notes.length = 0;
+  notes.push(...notesArray);
+  saveNotes();
 }
 
 // --------------------------------
 
-export function filteredNotes() {
-  const term = searchQuery.query.trim().toLowerCase();
-  if (!term) return notes;
-
-  return notes.filter(note => {
-    const title = (note.title || "").toLowerCase();
-    const content = (note.content || "").toLowerCase();
-    return title.includes(term) || content.includes(term);
-  });
+export let selectedTags = $state({selected: []});
+export let sortBy = $state({recent: 'recent'});
+export const allTags = () => {
+  return [...new Set(notes.flatMap(n => n.tags ?? []))];
 }
+
+export const filteredNotes = () => {
+  let out = notes;
+
+  if (searchQuery.query.trim()) {
+    const q = searchQuery.query.toLowerCase();
+    if (q.startsWith('#')) {
+      const tagQuery = q.substring(1); 
+
+      if (tagQuery) {
+        out = out.filter(n =>
+          n.tags?.some(t => t.toLowerCase().includes(tagQuery))
+        );
+      }
+    } else {
+      out = out.filter(
+        n =>
+          n.title.toLowerCase().includes(q) ||
+            n.content.toLowerCase().includes(q)
+      );
+    }
+  }
+
+  if (selectedTags.selected.length) {
+    out = out.filter(n =>
+      selectedTags.selected.every(t => n.tags?.includes(t))
+    );
+  }
+
+  out = [...out].sort((a, b) =>
+    sortBy.recent === 'recent'
+      ? b.updatedAt - a.updatedAt
+      : sortBy.recent === 'oldest'
+        ? a.updatedAt - b.updatedAt
+        : 0
+  );
+
+  return out;
+}
+
 
 const savePendingChanges = (change) => {
   if (!browser) return;
@@ -51,7 +118,7 @@ const savePendingChanges = (change) => {
 
 // --------------------------------
 
-export const addNote = async (title,content) => {
+export const addNote = async (title,content,tags) => {
   const { db } = await getFirebase();
   const { doc,setDoc } = await import('firebase/firestore');
   if(!db || !doc || !setDoc) console.error("error")
@@ -60,6 +127,7 @@ export const addNote = async (title,content) => {
     content,
     id: crypto.randomUUID(),
     updatedAt: Date.now(),
+    tags: tags || [],
   }
   notes.push(newNote);
   saveNotes();
@@ -77,13 +145,14 @@ export const addNote = async (title,content) => {
 
 // --------------------------------
 
-export const updateNote = async (id, title, content) => {
+export const updateNote = async (id, title, content,tags) => {
   const index = notes.findIndex(note => note.id === id);
   if (index === -1) return;
   const updatedFields = {
     title,
     content,
-    updatedAt: Date.now()
+    updatedAt: Date.now(),
+    tags: tags || [],
   };
 
   notes[index] = { ...notes[index], ...updatedFields };

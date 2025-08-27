@@ -117,7 +117,7 @@
     <header transition:slide={{ duration: 250 }} >
       <h1>My {#if path === "/"} Tasks {:else} Notes {/if}</h1>
       {#if $user}
-        <button onclick={toggleParagraph}>
+        <button class="btn" onclick={toggleParagraph}>
           {#if $user && $user.photoURL}
             <img class="profileImage" src={$user.photoURL} alt="User Profile" />
           {:else}
@@ -126,6 +126,7 @@
         </button>
 
         {#if showParagraph}
+            <div class="overlay"></div>
           <div transition:fade={{ duration: 200 }} class="info">
             <p class="greet">
               {#if $user && $user.photoURL}
@@ -185,6 +186,20 @@ main {
   overflow-y: auto;
   inset: 0;
 }
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 98; 
+}
+.btn {
+  z-index: 99;
+}
+
 .sideBar {
   display: flex;
   flex-direction: column;
@@ -239,7 +254,7 @@ header {
   top: 5rem;
   display: flex;
   flex-direction: column;
-  z-index: 22;
+  z-index: 99;
   padding: 1rem;
   background-color: var(--md-sys-color-surface-container-high);
   opacity: 0.9;
