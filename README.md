@@ -8,21 +8,21 @@ A simple and fast app to manage your notes, tasks, and focus time, all in one pl
 
 ### ✨ Features
 
-*   **📝 Markdown Notes:** Write rich notes with a secure, real-time markdown preview.
+*   **📝 Markdown Notes:** Write notes with markdown preview.
 *   **✅ Simple Todos:** Keep track of your tasks and check them off as you go.
 *   **🍅 Pomodoro Timer:** Stay focused and manage your work sessions effectively.
 *   **☁️ Firebase Sync:** Your data is always synced across all your devices (optional, can work without it).
 *   **✈️ Offline Support:** Keep working even when the internet isn't. The app saves your changes locally and syncs when you're back online.
-*   **📱 PWA Ready:** Install it on your phone or desktop for a native app-like experience.
+*   **📱 PWA:** Install it on your phone or desktop for a native app-like experience.
 
 ---
 
 ### 🛠️ Tech Stack
 
 *   **Framework:** **Svelte 5**
-*   **UI:** **Google's Material Web Components** for a clean, modern look.
+*   **UI:** **Google's Material Web Components**.
 *   **Backend & Sync:** **Firebase** (Firestore & Authentication).
-*   **Markdown:** `marked` for parsing and `DOMPurify` for keeping things secure.
+*   **Markdown:** `marked` for parsing.
 
 ---
 
