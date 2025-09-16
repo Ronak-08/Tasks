@@ -3,7 +3,6 @@ import {
   notes,
   filteredNotes,
   loadNotes,
-  searchQuery,
   sortBy,
   selectedTags,
   allTags,
@@ -13,7 +12,7 @@ import {
   deleteNote,
 } from "$lib/noteStore.svelte.js";
 import { onMount } from "svelte";
-import { fade, fly } from "svelte/transition";
+import { fade,fly } from "svelte/transition";
 import NotePad from "$lib/components/notePad.svelte";
 import Modal from "$lib/components/Modal.svelte";
 
@@ -152,33 +151,28 @@ onMount(() => {
 
 <div class="notesHeader">
   <md-fab
-  role="button"
-  onclick={handleNewNote}
-  class="fab"
-  variant="primary"
-  label="New Note"
-  aria-label="Edit"
->
-  <md-icon style="margin-right: 6px;" class="material-symbols-rounded" slot="icon">edit</md-icon>
-</md-fab>
+    role="button"
+    onclick={handleNewNote}
+    class="fab"
+    variant="primary"
+    label="New Note"
+    aria-label="Edit"
+  >
+    <md-icon style="margin-right: 6px;" class="material-symbols-rounded" slot="icon">edit</md-icon>
+  </md-fab>
 
-  <input
-    type="text"
-    placeholder="Search Notes..."
-    bind:value={searchQuery.query}
-    class="search"
-  />
-
+<div class="wrap2">
   <md-filled-tonal-icon-button onclick={() => {showSettings = !showSettings}}>
     <span class="material-symbols-rounded">
-settings
-</span>
+      settings
+    </span>
   </md-filled-tonal-icon-button>
   <md-filled-tonal-icon-button onclick={() => {show = !show}}>
     <span class="material-symbols-rounded">
-filter_alt
-</span>
+      filter_alt
+    </span>
   </md-filled-tonal-icon-button>
+  </div>
 </div>
 
 {#if displayedNotes.length}
@@ -213,6 +207,7 @@ filter_alt
 <NotePad bind:noteTitle bind:noteContent bind:tags bind:noteId bind:open />
 
 {#if show}
+  <div class="overlay" onclick={() => {show = false}} ></div>
   <div in:fly={{ y: 100, duration: 200 }}
     out:fly={{ y: 100, duration: 200 }} class="hiddenContainer">
 
@@ -320,6 +315,7 @@ filter_alt
   align-items: center;
   gap: 10px;
   margin: var(--space-small);
+  margin-left: 1.5rem;
   padding: var(--space-small);
 }
 
@@ -378,21 +374,13 @@ filter_alt
   z-index: 9;
   right: 1rem;
 }
-
-.search {
-  padding: var(--space-medium);
-  width: 85%;
-  background-color: var(--md-sys-color-surface-container-high);
-  border-radius: 52px;
-}
-
 .notes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  max-height: 55vh;
+  max-height: 60vh;
   gap: 0.5rem;
   overflow: auto;
-  padding: 0.8rem;
+  padding: 0.7rem;
   margin: var(--space-medium);
 }
 .note-card {
@@ -410,9 +398,14 @@ filter_alt
   transition: 0.2s all ease;
 }
 .note-card .note-title {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   font-weight: 500;
   margin-bottom: 1rem;
-  max-width: 65%;
+  max-width: 70%;
+  max-height: 60px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -545,5 +538,22 @@ filter_alt
     left: 30%;
     height: fit-content;
   }
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 98;
+}
+.wrap2 {
+  display: flex;
+  gap: 10px;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  padding: 7px;
+  border-radius: 32px;
 }
 </style>

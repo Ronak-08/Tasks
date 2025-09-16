@@ -1,32 +1,15 @@
 <script>
   import { browser } from "$app/environment";
-  import { fade } from "svelte/transition";
+  import { fade,scale } from "svelte/transition";
   import { quintOut } from "svelte/easing";
 
-  export let origin = {
-    x: browser ? window.innerWidth / 2 : 400,
-    y: browser ? window.innerHeight / 2 : 300,
-  };
   export let modalClass = "";
   export let open = false;
-
-  function scaleFromOrigin(node, params) {
-    const { duration = 300, easing = quintOut } = params;
-    return {
-      duration,
-      easing,
-      css: (t) => `
-transform-origin: ${origin.x}px ${origin.y}px;
-transform: scale(${t});
-opacity: ${t};
-`,
-    };
-  }
 </script>
 
 {#if open}
   <div
-    in:scaleFromOrigin={{ duration: 350 }}
+    in:scale={{ duration: 350 }}
     out:fade={{ duration: 200 }}
     class="modal {modalClass}"
     role="presentation"

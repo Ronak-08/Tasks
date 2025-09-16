@@ -1,8 +1,7 @@
 <script>
 import { notes,addNote, updateNote } from "$lib/noteStore.svelte";
-import { fly, scale } from "svelte/transition";
+import { fly,scale } from "svelte/transition";
 import { onMount } from "svelte";
-    import Modal from "./Modal.svelte";
 
 let {
   open = $bindable(false),
@@ -12,6 +11,8 @@ let {
   noteId = null,
 } = $props();
 let tagInput = $state('');
+let tagIn = $state();
+let textarea = $state();
 let markdownMode = $state(false);
 let marked = $state(null);
 let DOMPurify = $state(null);
@@ -80,6 +81,36 @@ function removeTag(tagToRemove) {
   tags = tags.filter(tag => tag !== tagToRemove);
 }
 
+function insertFormatting(openWrapper, closeWrapper = openWrapper) {
+    if (!textarea) return;
+    
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = noteContent.substring(start, end);
+    
+    const formattedText = `${openWrapper}${selectedText || ''}${closeWrapper}`;
+    const newContent = noteContent.substring(0, start) + formattedText + noteContent.substring(end);
+    
+    noteContent = newContent;
+    
+    setTimeout(() => {
+      const middlePos = start + openWrapper.length + (selectedText.length || 0);
+      textarea.setSelectionRange(middlePos, middlePos);
+      textarea.focus();
+    }, 0);
+  }
+
+function toggleTagContainer() {
+  showTagContainer = !showTagContainer;
+  if (showTagContainer) {
+    setTimeout(() => {
+      if (tagIn) {
+        tagIn.focus();
+      }
+    }, 0);
+  }
+}
+
 
 </script>
 
@@ -88,7 +119,7 @@ function removeTag(tagToRemove) {
 {#if open}
   <form class="note-pad" transition:scale onsubmit={handleSubmit}>
     <div class="header">
-      <md-outlined-icon-button type="submit">
+      <md-outlined-icon-button class="back" type="submit">
         <md-icon class="material-symbols-rounded">arrow_back</md-icon>
       </md-outlined-icon-button>
       <input class="note-title" maxlength="100" placeholder="Note Title..." bind:value={noteTitle} type="text" />
@@ -100,16 +131,6 @@ function removeTag(tagToRemove) {
         {/if}
       </button>
     </div>
-          <div class="tags">
-      {#each tags as tag (tag)}
-        <button transition:scale={{duration: 100}} type="button" class="tag" onclick={() => removeTag(tag)} >
-          {tag}
-        </button>
-      {/each}
-          <button type="button" class="showTag" onclick={() => {showTagContainer = !showTagContainer}}>
-        <md-icon class="material-symbols-rounded">add</md-icon>
-      </button>
-        </div>
 
 
     <div class="text-wrap">
@@ -118,24 +139,70 @@ function removeTag(tagToRemove) {
        {@html renderedHtml}
         </div>
       {:else}
-      <textarea name="note-pad" bind:value={noteContent}></textarea>
+      <textarea name="note-pad" bind:this={textarea} bind:value={noteContent}></textarea>
         {/if}
+    </div>
+
+    <div class="shortcut">
+      <button type="button" class="showTag" onclick={toggleTagContainer}>
+        <md-icon class="material-symbols-rounded">tag</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('**')}>
+        <md-icon class="material-symbols-rounded">format_bold</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('*')}>
+        <md-icon class="material-symbols-rounded">format_italic</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('`')}>
+        <md-icon class="material-symbols-rounded">code</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('~~')}>
+        <md-icon class="material-symbols-rounded">strikethrough_s</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('# ', '\n')}>
+        <md-icon class="material-symbols-rounded">title</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('[', '](url)')}>
+        <md-icon class="material-symbols-rounded">link</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('- ', '\n')}>
+        <md-icon class="material-symbols-rounded">format_list_bulleted</md-icon>
+      </button>
+
+      <button type="button" onclick={() => insertFormatting('1. ', '\n')}>
+        <md-icon class="material-symbols-rounded">format_list_numbered</md-icon>
+      </button>
     </div>
 
 
     {#if showTagContainer}
-      <div class="overlay"></div>
-   <div class="tags-container" in:fly={{ y: 100, duration: 200 }}
-    out:fly={{ y: 100, duration: 200 }} >
-      <input
-        class="tag-input"
-        type="text"
-        placeholder="Add a tag..."
-        bind:value={tagInput}  
-        onkeydown={handleTagInput}
-      />
-    </div>
-  {/if}
+      <div onclick={() => showTagContainer = false} class="overlay"></div>
+      <div class="tags-container" in:fly={{ y: 100, duration: 200 }}
+        out:fly={{ y: 100, duration: 200 }} >
+        <input
+          class="tag-input"
+          type="text"
+          placeholder="Add a tag..."
+          bind:this={tagIn}
+          bind:value={tagInput}  
+          onkeydown={handleTagInput}
+        />
+        <div class="tags">
+          {#each tags as tag (tag)}
+            <button transition:scale={{duration: 100}} type="button" class="tag" onclick={() => removeTag(tag)} >
+              {tag}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
 
   </form>
 {/if}
@@ -154,7 +221,8 @@ function removeTag(tagToRemove) {
   padding: var(--space-small);
   height: 100dvh;
   width: 100vw;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .header {
   display: flex;
@@ -166,9 +234,12 @@ function removeTag(tagToRemove) {
   background-color: var(--md-sys-color-surface-container-high);
   border-radius: 16px;
   padding: var(--space-small);
-  font-size: 1.2rem;
-  font-weight: 500;
-  width: fit-content;
+  font-size: 1.4rem;
+  font-weight: 600;
+  width: 100%;
+}
+.back {
+  width: 50px;
 }
 .edit {
 background-color: var(--md-sys-color-primary);
@@ -181,10 +252,11 @@ color: var(--md-sys-color-on-primary);
 }
 .text-wrap {
   /* border: 2px solid red; */
-  margin: 0.7rem;
-  height: 70vh;
+  margin: 0.6rem;
+  min-height: 60vh;
   border-radius: 16px;
   overflow-y: auto;
+  flex: 1;
   color: var(--md-sys-color-on-surface-variant);
   background-color: var(--md-sys-color-surface-container-high);
 }
@@ -200,12 +272,12 @@ textarea {
 }
 
 .rendered-content {
-    padding: 1rem; 
-    font-size: 0.9rem;
-    word-wrap: break-word;
+  padding: 1rem; 
+  font-size: 0.9rem;
+  word-wrap: break-word;
   white-space: pre-wrap;
-    overflow-wrap: break-word;
-  }
+  overflow-wrap: break-word;
+}
 
 :global(.rendered-content pre) {
     white-space: pre-wrap;  
@@ -241,6 +313,7 @@ textarea {
   position: fixed;
   top: 50%;
   left: 50%;
+  max-width: 80vw;
   transform: translate(-50%,-50%);
   z-index: 99;
   flex-direction: column;
@@ -260,8 +333,8 @@ textarea {
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(8px);
-  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.3);
   z-index: 98; 
 }
 .tags {
@@ -269,32 +342,54 @@ textarea {
   overflow-x: auto;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: 16px;
-  max-width: 90vw;
+  max-width: 80%;
   gap: 5px;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
   margin: 1rem 0.8rem 0.7rem 0.8rem;
   align-items: center;
-  padding: 4px;
+  padding: 10px 1rem;
 }
 .tags::-webkit-scrollbar {
   display: none;
 }
  .tag {
   background-color: var(--md-sys-color-primary-container);
-  padding: 6px;
+  padding: 6px 10px 6px 10px;
   display: flex;
+  scroll-snap-align: start;
   justify-content: center;
   flex: 0 1 auto;
   gap: 10px;
   border-radius: 32px;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--md-sys-color-on-primary-container);
 }
 .tag-input {
   background-color: var(--md-sys-color-surface-container-highest);
-  padding: 7px;
+  padding: 10px;
+  margin-top: 1rem;
   border-radius: 32px;
 }
-
+.shortcut {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: space-evenly;
+  padding: 0.5rem;
+  background-color: var(--md-sys-color-surface-container-high);
+  border-radius: 26px;
+  margin: 0;
+}
+.shortcut button {
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+.shortcut button:active {
+  transform: scale(0.95);
+  color: var(--md-sys-color-primary);
+}
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .text-wrap {
@@ -303,7 +398,7 @@ textarea {
 }
 @media (min-width: 1024px) {
   .note-pad {
-    height: 90vh;
+    height: 100%;
     width: 31vw;
     left: 68%;
     box-shadow: -3px 2px 7px rgba(0, 0, 0,0.5);

@@ -1,50 +1,57 @@
-import { writable, get, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 import {user} from '$lib/userStore.js';
+import { get } from 'svelte/store';
 import { getFirebase } from "$lib/firebase.js";
-export const tasks = writable([]);
+import { searchQuery } from "$lib/index.svelte.js";
+
+
+let tasks = $state([]);
 let pendingDeletions = [];
-export let searchQuery = writable("");
 
-export const filteredTasks = derived(
-  [tasks, searchQuery],
-  ([$tasks, $search]) => {
-    let filtered;
-    if (!$search.trim()) {
-      filtered = $tasks || [];
-    } else {
-      const searchTerm = $search.toLowerCase();
-      if (!Array.isArray($tasks)) {
-        filtered = [];
-      } else {
-        filtered = $tasks.filter(task => {
-          return task && typeof task.task === 'string' && task.task.toLowerCase().includes(searchTerm);
-        });
+
+export const filteredTasks = () => {
+  let filtered = tasks;
+  const query = searchQuery.query.trim().toLowerCase();
+
+  if (query) {
+    if (query.startsWith('#')) {
+      const tagQuery = query.substring(1);
+      if (tagQuery) {
+        filtered = filtered.filter(t =>
+          (t.tags ?? []).some(tag => tag.toLowerCase().includes(tagQuery))
+        );
       }
+    } else {
+      filtered = filtered.filter(t =>
+        (t.task?.toLowerCase() ?? '').includes(query) ||
+          (t.description?.toLowerCase() ?? '').includes(query) ||
+          (t.tags ?? []).some(tag => tag.toLowerCase().includes(query))        ||  (t.subtasks ?? []).some(s => s.task.toLowerCase().includes(query))
+      );
     }
-    return filtered.sort((a, b) => {
-      const isAHigh = a.priority === 'High';
-      const isBHigh = b.priority === 'High';
-      return isBHigh - isAHigh;
-    });
   }
-);
 
-export const filteredOngoing = derived(filteredTasks, $filtered =>
-  $filtered.filter(t => !t.completed)
-);
+  return [...filtered].sort((a, b) => {
+    const priorityOrder = { High: 0, Medium: 1, Low: 2 };
+    const aPriority = priorityOrder[a.priority] ?? 999;
+    const bPriority = priorityOrder[b.priority] ?? 999;
+    return aPriority - bPriority;
+  });
+};
 
-export const filteredCompleted = derived(filteredTasks, $filtered =>
-  $filtered.filter(t => t.completed)
-);
+export const completedTasks = () => {
+  return filteredTasks().filter(task => task.completed);
+};
+
+export const ongoingTasks = () => {
+  return filteredTasks().filter(task => !task.completed);
+};
 
 export function updateTask(updatedTask) {
-  tasks.update(current => {
-    return current.map(task =>
-      task.id === updatedTask.id ? updatedTask : task
-    );
-  });
-  saveToLocalStorage()
+const taskIndex = tasks.findIndex(t => t.id === updatedTask.id);
+if (taskIndex !== -1) {
+  tasks[taskIndex] = { ...updatedTask };
+}
+  saveToLocalStorage();
 }
 
 let localSaveTimeout;
@@ -52,7 +59,7 @@ export function saveToLocalStorage(delay = 250) {
   if (!browser) return;
   clearTimeout(localSaveTimeout);
   localSaveTimeout = setTimeout(() => {
-    let currentTasks = get(tasks);
+    let currentTasks = tasks;
     const data = localStorage.setItem("tasks", JSON.stringify(currentTasks));
   }, delay);
 }
@@ -61,7 +68,7 @@ export function loadTasks() {
   if (!browser) return;
   
   const localTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-  tasks.set(localTasks);
+  tasks = localTasks;
   
   const localDeletions = JSON.parse(localStorage.getItem("pendingDeletions") || "[]");
   pendingDeletions = localDeletions;
@@ -73,8 +80,10 @@ function savePendingDeletions() {
 
 export async function deleteTask(task) {
   if (!browser) return;
-  tasks.update(current => current.filter(t =>
-    t.id !== task.id))
+  const taskIndex = tasks.findIndex(t => t.id === task.id);
+  if (taskIndex !== -1) {
+    tasks.splice(taskIndex, 1);
+  }
   if (!pendingDeletions.includes(task.id)) {
     pendingDeletions.push(task.id);
     savePendingDeletions();
@@ -86,7 +95,7 @@ export async function processPendingDeletions() {
   const cUser = get(user);
   const { db } = await getFirebase();
     const { doc,writeBatch } = await import('firebase/firestore');
-  if (!cUser || pendingDeletions.length < 10) return;
+  if (!cUser || pendingDeletions.length < 1) return;
 
   let batchDeletions = [];
 
@@ -114,22 +123,24 @@ export async function processPendingDeletions() {
     savePendingDeletions();
   }
 }
+
 export async function addTask(taskData) {
   const { db } = await getFirebase();
   const { doc, setDoc } = await import('firebase/firestore');
-const task = {
+  const task = {
     id: crypto.randomUUID(), 
     completed: false,
     createdAt: new Date().toISOString(), 
     ...taskData,
   };
 
-  tasks.update(current => [...current, task]);
+  tasks.push(task);
+
   saveToLocalStorage();
   const currentUser = get(user)
   if (currentUser) {
-    const userId = currentUser.uid
-    setDoc(doc(db, 'users', userId, 'tasks', task.id), task)
+    const userId = currentUser.uid 
+    await setDoc(doc(db, 'users', userId, 'tasks', task.id), task)
   }
 }
 
@@ -140,6 +151,7 @@ function debounce(func, delay) {
     timer = setTimeout(() => func(...args), delay);
   };
 }
+
 const firestoreUpdate = debounce(async (task, userId) => {
   const { db } = await getFirebase();
   const { doc, setDoc } = await import('firebase/firestore');
@@ -150,22 +162,32 @@ const firestoreUpdate = debounce(async (task, userId) => {
   }
 }, 2000);
 
-export async function completedTask(completedTask) {
-  let updatedTask;
-  tasks.update(current => {
-    return current.map(t => {
-      if (t.id === completedTask.id) {
-        updatedTask = { ...t, completed: !t.completed };
-        return updatedTask;
-      }
-      return t;
-    });
-  });
-  saveToLocalStorage();
-  const currentUser = get(user);
-  if (currentUser?.uid && updatedTask) {
-    firestoreUpdate(updatedTask, currentUser.uid);
+export async function completedTask(itemToToggle) {
+  const mainTaskIndex = tasks.findIndex(t => t.id === itemToToggle.id);
+  if (mainTaskIndex !== -1) {
+    const updatedTask = { ...itemToToggle, completed: !itemToToggle.completed };
+    await updateTask(updatedTask);
+    return;
   }
+
+  const parentTask = tasks.find(task => task.subtasks?.includes(itemToToggle));
+  if (parentTask) {
+    itemToToggle.completed = !itemToToggle.completed;
+
+    const allDone =
+      parentTask.subtasks.length > 0 &&
+      parentTask.subtasks.every(st => st.completed);
+
+    parentTask.completed = allDone;
+
+    await updateTask(parentTask);
+    return;
+  }
+
+  console.warn(
+    "completedTask was called with an item that is neither a task nor a known subtask:",
+    itemToToggle
+  );
 }
 
 export async function syncTasksWithDb() {
@@ -178,7 +200,7 @@ export async function syncTasksWithDb() {
   }
   
   try {
-    const localTasks = get(tasks);
+    const localTasks = tasks;
     const pendingDeletionIds = new Set(pendingDeletions);
 
     const hasLocalTasks = localTasks.length > 0;
@@ -200,22 +222,22 @@ export async function syncTasksWithDb() {
         });
       }
       await batch.commit();
-    } else {
+      if (hasPendingDeletions) {
+        pendingDeletions = [];
+        localStorage.removeItem('pendingDeletions');
+      }
+
     }
 
     const querySnapshot = await getDocs(collection(db, 'users', currentUser.uid, 'tasks'));
     const remoteTasks = querySnapshot.docs.map(doc => ({ ...doc.data() })); 
-    const currentTasks = get(tasks);
+    const currentTasks = tasks;
     if (JSON.stringify(currentTasks) !== JSON.stringify(remoteTasks)) {
-      tasks.set(remoteTasks);
+      tasks = remoteTasks;
       saveToLocalStorage();
     } else {
     }
     
-    if (hasPendingDeletions) {
-      pendingDeletions = [];
-      localStorage.removeItem('pendingDeletions');
-    }
 
   } catch (error) {
     console.error("Task sync failed:", error);
@@ -230,7 +252,7 @@ export async function syncTasksWithDb() {
 }
 export function clearTasks() {
   if(browser) {
-    tasks.set([]);
+    tasks = [];
     localStorage.removeItem('tasks');
   }
 }

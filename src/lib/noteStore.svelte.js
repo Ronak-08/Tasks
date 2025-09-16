@@ -2,9 +2,9 @@ import { browser } from "$app/environment";
 import {user} from '$lib/userStore.js';
 import { get } from "svelte/store";
 import { getFirebase } from "$lib/firebase.js";
+import { searchQuery } from "$lib/index.svelte.js";
 
 export const notes = $state([]);
-export const searchQuery = $state({ query: "" });
 
 const saveNotes = () => {
   if (!browser) return;

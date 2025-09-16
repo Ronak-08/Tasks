@@ -2,7 +2,7 @@ import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { getFirebase } from '$lib/firebase.js';
 
-import { syncTasksWithDb } from '$lib/taskStore.js';
+import { syncTasksWithDb } from '$lib/taskStore.svelte.js';
 import { syncNotes as syncNotesWithDb } from '$lib/noteStore.svelte.js';
 
 export const user = writable(null);

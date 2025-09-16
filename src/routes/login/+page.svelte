@@ -102,7 +102,7 @@ async function handleGoogleSignIn() {
         <p class="error-message">{errorMessage}</p>
       {/if}
 
-      <md-filled-button type="submit" disabled={!isFirebaseReady}>
+      <md-filled-button type="submit" class="submitBtn" disabled={!isFirebaseReady}>
         {#if !isFirebaseReady}
           Loading...
         {:else if isLogin}
@@ -127,9 +127,10 @@ async function handleGoogleSignIn() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px; 
-  max-width: 400px;
-  margin: 40px auto;
+  max-width: 450px;
+  margin: 20px auto;
+  gap: 1rem;
+  padding-top: 1rem;
 }
 .email-signup form, fieldset {
   border: none;
@@ -160,18 +161,11 @@ async function handleGoogleSignIn() {
   margin-top: 0.5rem;
   font-size: 0.9rem;
 }
-main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  padding-top: 2rem;
-}
 h1 {
   font-size: 2rem;
   text-wrap: nowrap;
   margin: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
 }
 form {
   display: flex;
@@ -207,11 +201,14 @@ md-filled-button {
   margin-bottom: var(--space-small);
 }
 label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--md-sys-color-tertiary);
-  margin: 0.7rem 0;
+  margin: 0.4rem 0;
 }
 fieldset {
-  margin: 12px;
+  margin: 8px;
+}
+.submitBtn {
+  width: 90%;
 }
 </style>
