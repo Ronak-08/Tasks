@@ -314,9 +314,9 @@ onMount(() => {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  overflow: hidden;
   margin: var(--space-small);
   margin-left: 1.5rem;
-  padding: var(--space-small);
 }
 
 
@@ -324,7 +324,7 @@ onMount(() => {
   position: fixed;
   bottom: 0;
   width: 100%;
-  height: 35vh;
+  height: 40vh;
   z-index: 99;
   color: var(--md-sys-color-on-surface-container);
   background-color: var(--md-sys-color-surface-container-high);
@@ -356,10 +356,12 @@ onMount(() => {
   display: flex;
   font-size: 0.9rem;
   flex-direction: column;
-  margin: 0.7rem;
+  margin: 0.8rem;
+  max-height: 60%;
+  overflow-y: auto;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: 16px;
-  padding: 0.6rem;
+  padding: 0.5rem;
 }
 .chip-set {
   margin: 1.2rem 0.6rem 0.6rem;
@@ -370,14 +372,14 @@ onMount(() => {
 
 .fab {
   position: fixed;
-  bottom: 10vh;
+  bottom: 11vh;
   z-index: 9;
   right: 1rem;
 }
 .notes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  max-height: 60vh;
+  max-height: 85%;
   gap: 0.5rem;
   overflow: auto;
   padding: 0.7rem;
@@ -412,10 +414,11 @@ onMount(() => {
 .note-card .note-content {
   font-size: 0.9rem;
   font-weight: 400;
+  white-space: pre-wrap;
   color: var(--md-sys-color-on-surface-variant);
   display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;

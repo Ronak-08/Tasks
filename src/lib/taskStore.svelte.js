@@ -47,10 +47,10 @@ export const ongoingTasks = () => {
 };
 
 export function updateTask(updatedTask) {
-const taskIndex = tasks.findIndex(t => t.id === updatedTask.id);
-if (taskIndex !== -1) {
-  tasks[taskIndex] = { ...updatedTask };
-}
+  const taskIndex = tasks.findIndex(t => t.id === updatedTask.id);
+  if (taskIndex !== -1) {
+    tasks[taskIndex] = { ...updatedTask };
+  }
   saveToLocalStorage();
 }
 
@@ -66,10 +66,10 @@ export function saveToLocalStorage(delay = 250) {
 
 export function loadTasks() {
   if (!browser) return;
-  
+
   const localTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
   tasks = localTasks;
-  
+
   const localDeletions = JSON.parse(localStorage.getItem("pendingDeletions") || "[]");
   pendingDeletions = localDeletions;
 }
@@ -89,39 +89,6 @@ export async function deleteTask(task) {
     savePendingDeletions();
   }
   saveToLocalStorage();
-}
-
-export async function processPendingDeletions() {
-  const cUser = get(user);
-  const { db } = await getFirebase();
-    const { doc,writeBatch } = await import('firebase/firestore');
-  if (!cUser || pendingDeletions.length < 1) return;
-
-  let batchDeletions = [];
-
-  try {
-    let batch = writeBatch(db);
-    const maxBatchSize = 500;
-
-    while (pendingDeletions.length > 0) {
-      batchDeletions = pendingDeletions.splice(0, maxBatchSize);
-
-      batchDeletions.forEach(taskId => {
-        const taskRef = doc(db, 'users', cUser.uid, 'tasks', taskId);
-        batch.delete(taskRef);
-      });
-
-      await batch.commit();
-      batch = writeBatch(db);
-    }
-    localStorage.removeItem('pendingDeletions');
-    pendingDeletions = [];
-    saveToLocalStorage();
-  } catch (e) {
-    console.error("Deletion batch failed:", e);
-    pendingDeletions.push(...batchDeletions);
-    savePendingDeletions();
-  }
 }
 
 export async function addTask(taskData) {
@@ -176,7 +143,7 @@ export async function completedTask(itemToToggle) {
 
     const allDone =
       parentTask.subtasks.length > 0 &&
-      parentTask.subtasks.every(st => st.completed);
+        parentTask.subtasks.every(st => st.completed);
 
     parentTask.completed = allDone;
 
@@ -194,21 +161,21 @@ export async function syncTasksWithDb() {
   const currentUser = get(user);
   const { db } = await getFirebase();
   const { doc,writeBatch,getDocs,collection } = await import('firebase/firestore');
-  
+
   if (!browser || !currentUser) {
     return;
   }
-  
+
   try {
     const localTasks = tasks;
     const pendingDeletionIds = new Set(pendingDeletions);
 
     const hasLocalTasks = localTasks.length > 0;
     const hasPendingDeletions = pendingDeletionIds.size > 0;
-    
+
     if (hasLocalTasks || hasPendingDeletions) {
       const batch = writeBatch(db);
-      
+
       if (hasLocalTasks) {
         localTasks.forEach(task => {
           const taskRef = doc(db, 'users', currentUser.uid, 'tasks', task.id);
@@ -237,7 +204,7 @@ export async function syncTasksWithDb() {
       saveToLocalStorage();
     } else {
     }
-    
+
 
   } catch (error) {
     console.error("Task sync failed:", error);

@@ -5,7 +5,6 @@ import { browser } from "$app/environment";
 import { page } from "$app/stores";
 import { goto } from "$app/navigation";
 import { fade, slide } from "svelte/transition";
-import { breakpoints } from "$lib/breakpoints.js";
 import { user, initializeAuth } from "$lib/userStore.js";
 import { clearNotes } from "$lib/noteStore.svelte.js";
 import { clearTasks } from "$lib/taskStore.svelte.js";
@@ -24,11 +23,6 @@ onMount(() => {
   import("@material/web/iconbutton/outlined-icon-button.js");
   import("@material/web/iconbutton/filled-tonal-icon-button.js");
 
-  const stored = localStorage.getItem("welcomeDismissed");
-  if (stored !== "true") {
-    showWelcome = true;
-  }
-
   if (browser && "serviceWorker" in navigator) {
     navigator.serviceWorker.register("/service-worker.js").catch((error) => {
       console.error("Service Worker registration failed:", error);
@@ -37,11 +31,6 @@ onMount(() => {
 
   initializeAuth();
 });
-
-function dismissWelcome() {
-  showWelcome = false;
-  localStorage.setItem("welcomeDismissed", "true");
-}
 async function handleLogout() {
   try {
     const { getFirebase } = await import("$lib/firebase.js");
@@ -64,38 +53,11 @@ function toggleParagraph() {
 }
 </script>
 
-{#if showWelcome}
-  <div transition:fade={{ duration: 300 }} class="welcome">
-    {#if step === 1}
-      <h1>Welcome</h1>
-      <md-filled-button class="getStarted" onclick={() => (step = 2)}>
-        <md-icon class="material-symbols-rounded">arrow_forward</md-icon>
-      </md-filled-button>
-    {:else if step === 2}
-      <div transition:fade={{ duration: 300 }} class="page2">
-        <h2>About this app 🚀</h2>
-        <p>
-          This app helps you stay organized with tasks, notes, focus tools, 
-          and optional syncing. Here’s how to get started:
-        </p>
-        <ul>
-          <li>∘ Hold a task to delete it.</li>
-          <li>∘ Select multiple notes to delete them at once.</li>
-          <li>∘ Use <code>#</code> in the search bar to filter by tags.</li>
-        </ul>
-        <button class="start" onclick={dismissWelcome}>Start</button>
-      </div>
-    {/if}
-
-  </div>
-{/if}
-
 <div class="app">
-  {#if $breakpoints.isTablet || $breakpoints.isDesktop || $breakpoints.isLargeDesktop}
     <div class="sideBar">
       <img src="/logo.png" class="logo" alt="logo" />
       <a href="/" class="link"
-      ><md-icon class:active={path === "/"}>edit</md-icon>
+      ><md-icon class:active={path === "/"}>task</md-icon>
         <p class:active={path === "/"}>Tasks</p></a
       >
       <a href="/pomodoro" class="link"
@@ -106,21 +68,50 @@ function toggleParagraph() {
       ><md-icon class:active={path === "/notes"}>docs</md-icon>
         <p class:active={path === "/notes"}>Notes</p></a
       >
-    </div>
-  {/if}
 
-  <div class="content-wrap">
-    {#if path !== "/pomodoro" && path !== "/login"}
-      <header transition:slide={{ duration: 250 }}>
-        <input
-          type="text"
-          placeholder="Search..."
-          bind:value={searchQuery.query}
-          class="search"
-        />
+      <div class="account">
+
         {#if $user}
-          <button class="btn" onclick={toggleParagraph}>
+          <button class="logout" onclick={handleLogout}>
+            <md-icon>logout</md-icon>
+            Logout
+          </button>
+
+
+          <button class="btn">
             {#if $user && $user.photoURL}
+              <img
+                class="profileImage"
+                src={$user.photoURL}
+                alt="User Profile"
+              />
+            {:else}
+              <md-icon class="profileIcon">account_circle</md-icon>
+            {/if}
+            {$user?.displayName || "User"}
+          </button>
+        {:else}
+          <a class="noLogin2" href="/login"
+          ><span class="material-symbols-rounded"> person_add </span> Sign in</a
+          >
+        {/if}
+      </div> 
+    </div>
+
+<div class="content-wrap">
+  {#if path !== "/pomodoro" && path !== "/login"}
+    <header transition:slide={{ duration: 250 }}>
+      <input
+        type="text"
+        placeholder="Search..."
+        bind:value={searchQuery.query}
+        class="search"
+      />
+
+        {#if $user}
+          <div class="profile">
+          <button class="btn" onclick={toggleParagraph}>
+            {#if $user.photoURL}
               <img
                 class="profileImage"
                 src={$user.photoURL}
@@ -132,10 +123,10 @@ function toggleParagraph() {
           </button>
 
           {#if showParagraph}
-            <div class="overlay"></div>
+            <div onclick={() => showParagraph = false} class="overlay"></div>
             <div transition:fade={{ duration: 200 }} class="info">
               <p class="greet">
-                {#if $user && $user.photoURL}
+                {#if $user.photoURL}
                   <img
                     class="profileImage"
                     src={$user.photoURL}
@@ -155,23 +146,25 @@ function toggleParagraph() {
               </md-filled-tonal-button>
             </div>
           {/if}
+      </div>
         {:else}
-          <a class="noLogin" href="/login"
-          ><span class="material-symbols-rounded"> person_add </span></a
-          >
+          <a class="noLogin" href="/login">
+            <span class="material-symbols-rounded">person_add</span>
+          </a>
         {/if}
-      </header>
-    {/if}
+    </header>
+  {/if}
+
+
     {#key $page.url.pathname}
       <main in:fade={{ duration: 150, delay: 150 }}>
         {@render children?.()}
       </main>
     {/key}
 
-    {#if $breakpoints.isMobile}
       <div class="navigation">
         <a href="/"
-        ><md-icon class:active={path === "/"}>edit</md-icon>
+        ><md-icon class:active={path === "/"}>task</md-icon>
           <p class:active={path === "/"}>Tasks</p></a
         >
         <a href="/pomodoro"
@@ -183,7 +176,6 @@ function toggleParagraph() {
           <p class:active={path === "/notes"}>Notes</p></a
         >
       </div>
-    {/if}
   </div>
 </div>
 
@@ -210,16 +202,35 @@ main {
 .btn {
   z-index: 99;
 }
+.account .btn {
+  display: flex;
+  align-items: center;
+  margin: 0.8rem 0.2rem;
+  background-color: var(--md-sys-color-surface-container);
+  padding: 6px;
+  border-radius: 13px;
+  text-wrap-mode: nowrap;
+  gap: 10px;
+  width: 100%;
+}
 
 .sideBar {
-  display: flex;
+  display:none;
   flex-direction: column;
   height: 100%;
-  width: fit-content;
-  background-color: var(--md-sys-color-surface-container);
+  margin: auto 0;
+  width: 190px;
+  background-color: var(--md-sys-color-surface-container-lowest);
   border-radius: 10px 10px 0 0;
-  border-right: 1.3px solid var(--md-sys-color-outline-variant);
-  padding: 0.9rem;
+  box-shadow: 1px 0px 8px rgba(0, 0, 0, 0.4);
+  padding: 0.7rem;
+}
+.account {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  width: 100%;
 }
 .sideBar .link md-icon {
   border-radius: 10px;
@@ -260,6 +271,13 @@ header {
 .profileIcon:hover {
   transform: scale(0.95);
 }
+.account .profileImage {
+ width: 34px;
+}
+.account .profileIcon {
+   font-size: 1.7rem;
+  margin: 0;
+}
 .info {
   position: absolute;
   right: 10px;
@@ -298,12 +316,6 @@ header {
 .greet img {
   width: 60px;
 }
-@media (min-width: 1024px) {
-  header {
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    padding: 0.5rem;
-  }
-}
 .navigation {
   display: flex;
   justify-content: space-around;
@@ -333,88 +345,61 @@ p.active {
 }
 md-icon {
   width: fit-content;
-  border-radius: 32px;
+  border-radius: 36px;
   --md-icon-font: "Material Symbols Rounded";
   transition: background-color 0.3s ease;
   margin-bottom: 4px;
   height: fit-content;
   padding: 5px 18px 5px 18px;
 }
-.welcome {
-  background: url("/blob-scene-haikei.svg") center/cover no-repeat;
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-small);
-  z-index: 99;
-}
-.welcome .page2 {
-  height: 100%;
-  width: 100%;
-  margin: 1rem;
-  padding: 1rem;
-  font-weight: 500;
-}
-.page2 p {
-  margin: 2rem 10px 2rem 7px;
-  font-size: 0.93rem;
-  color: var(--md-sys-color-on-surface-variant);
-}
-.page2 ul {
-  background-color: var(--md-sys-color-secondary-container);
-  border-radius: 16px;
-  opacity: 0.87;
-  color: var(--md-sys-color-on-secondary-container);
-  line-height: 2;
-  padding: 1rem;
-}
-.page2 .start {
-  padding: 0.6rem;
-  width: 80px;
-  border-radius: 32px;
-  background-color: var(--md-sys-color-primary);
-  color: var(--md-sys-color-on-primary);
-
-  position: absolute;
-  left: 50%;
-  bottom: 10%;
-  transform: translateX(-50%); 
-}
-
-@media (min-width: 1024px) {
-  .welcome {
-    background-size: 100% auto;
-    background-position: center top;
-  }
-}
-
-.welcome h1 {
-  font-size: 3.4rem;
-  margin: var(--space-medium);
-  font-weight: 500;
-}
-h1 {
-  font-size: 2.7rem;
-  word-spacing: 0.9;
-  font-weight: 500;
-  margin: 1rem;
-}
 .logo {
-  width: 80px;
-  height: 80px;
-  margin: 1rem auto;
+  width: 70px;
+  height: 70px;
+  margin: 1rem auto 2rem;
   background-color: var(--md-sys-color-surface-container-lowest);
   border-radius: 32px;
 }
-.getStarted {
-  padding: 0.6rem;
-  margin-top: 2rem;
+.noLogin2 {
+  padding: 0.5rem 17px;
+  background-color: var(--md-sys-color-surface-container);
+  border-radius: 16px;
 }
-.getStarted md-icon {
+.logout {
   display: flex;
   align-items: center;
+  background-color: var(--md-sys-color-surface-container);
+  padding: 0.3rem;
+  border-radius: 16px;
+  width: 100%;
 }
+.sideBar md-icon {
+padding: 5px 10px 5px;
+}
+.sideBar p.active {
+  color: var(--md-sys-color-primary);
+}
+
+@media (min-width: 768px) {
+.sideBar {
+  display: flex;
+  }
+  .profile {
+   display: none;
+  }
+  .navigation {
+   display: none;
+  }
+  .noLogin {
+    display: none;
+  }
+}
+@media (min-width: 1024px) {
+  header {
+    padding: 0.5rem;
+  }
+  .search {
+    width: 70%;
+  }
+}
+
 </style>

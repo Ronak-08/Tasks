@@ -151,7 +151,7 @@ onMount(loadTasks);
     onclick={(event) => openTaskModal(null, event)}
     aria-label="Add Task"
   >
-    <md-icon class="material-symbols-rounded" slot="icon">add</md-icon>
+    <md-icon class="material-symbols-rounded" slot="icon">add_task</md-icon>
   </md-fab>
 
 {#if state.deleteDialog.open}
@@ -630,7 +630,7 @@ onMount(loadTasks);
   .plus {
     position: fixed;
     z-index: 17;
-    bottom: 10vh;
+    bottom: 11vh;
     right: 1rem;
   }
   @media (min-width: 768px) and (max-width: 1024px) {
@@ -657,10 +657,8 @@ onMount(loadTasks);
   }
   @media (min-width: 1024px) {
     .plus {
-      top: 44%;
-      left: 3%;
-      margin-left: 0.5rem;
-      position: fixed;
+      position: static;
+      margin: 0 3rem ;
     }
     .hiddenContainer {
       max-width: 50%;
