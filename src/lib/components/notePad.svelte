@@ -21,9 +21,17 @@ let showTagContainer = $state(false);
 
 onMount(async () => {
   const markedModule = await import('marked');
+  const markedKatex = (await import('marked-katex-extension')).default;
   marked = markedModule.marked;
   const DOMPurifyModule = await import('dompurify');
   DOMPurify = DOMPurifyModule.default;
+  marked.setOptions({
+  gfm: true,
+});
+
+  marked.use(markedKatex({
+      throwOnError: false
+    }));
 })
 
 let renderedHtml = $derived.by(() => {
@@ -390,6 +398,13 @@ textarea {
   transform: scale(0.95);
   color: var(--md-sys-color-primary);
 }
+
+.rendered-content :global(ul),
+  .rendered-content :global(ol) {
+    padding-left: 1.5rem; /* A bit more padding is usually visually better */
+  }
+
+
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .text-wrap {

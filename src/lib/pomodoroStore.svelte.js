@@ -43,7 +43,7 @@ function initializeWorker() {
   worker.onmessage = (event) => {
     const {type, time} = event.data;
     if(type === 'tick') {
-      pomodoro.timeSeconds = time;
+      pomodoro.timeSeconds = time > 0 ? time : 0; 
     } else if (type === 'phaseEnd') {
       switchPhase();
     }

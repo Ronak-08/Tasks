@@ -1,17 +1,21 @@
 let timerInterval;
+let endTime;
+
 self.onmessage = (event) => {
-  const { command, time } = event.data;
+  const { command, time } = event.data; 
+
   if (command === 'start') {
     clearInterval(timerInterval);
 
-    let remainingTime = time;
+    endTime = Date.now() + (time * 1000);
 
     timerInterval = setInterval(() => {
-      remainingTime--;
+      const remainingTimeMs = endTime - Date.now();
+      const remainingTimeSec = Math.round(remainingTimeMs / 1000);
 
-      self.postMessage({ type: 'tick', time: remainingTime });
+      self.postMessage({ type: 'tick', time: remainingTimeSec });
 
-      if (remainingTime <= 0) {
+      if (remainingTimeMs <= 0) {
         clearInterval(timerInterval);
         self.postMessage({ type: 'phaseEnd' });
       }

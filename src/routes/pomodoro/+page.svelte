@@ -125,7 +125,7 @@ const openSettings = (event) => {
         {/each}
       </div>
     {:else}
-      <p>No focus sessions logged in the past week.</p>
+      <p class="text-p">No focus sessions logged in the past week.</p>
     {/if}
 
   </div>
@@ -329,5 +329,11 @@ input[type="number"]:placeholder-shown, input[type="number"]:invalid   {
   font-size: 0.9rem;
   max-height: 200px;
   overflow-y: auto;
+}
+.text-p {
+  text-align: center;
+  padding-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--md-sys-color-on-surface-variant);
 }
 </style>

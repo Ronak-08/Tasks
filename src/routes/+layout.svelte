@@ -3,6 +3,7 @@ import "../app.css";
 import { onMount } from "svelte";
 import { browser } from "$app/environment";
 import { page } from "$app/stores";
+import 'katex/dist/katex.min.css';
 import { goto } from "$app/navigation";
 import { fade, slide } from "svelte/transition";
 import { user, initializeAuth } from "$lib/userStore.js";
