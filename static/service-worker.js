@@ -1,4 +1,4 @@
-const CACHE_NAME = 'task-master-cache-v4';
+const CACHE_NAME = task-master-cache-{version};
 const urlsToCache = ['/', '/notes'];
 
 self.addEventListener('install', event => {
