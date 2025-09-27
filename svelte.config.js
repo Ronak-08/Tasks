@@ -12,11 +12,6 @@ const config = {
 			// if `edge` is true, this option cannot be used
 			split: false
 		}),
-    vite: {
-      optimizeDeps: {
-        include: ['katex', 'katex/dist/katex.min.css']
-      },
-    },
 	}
 };
 export default config;

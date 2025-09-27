@@ -16,11 +16,13 @@
     "rollup-plugin-visualizer": "latest",
     "svelte": "latest",
     "vite": "latest"
-  }, 
+  },
   "dependencies": {
     "@material/web": "^2.3.0",
     "dompurify": "^3.2.6",
     "firebase": "^11.9.1",
-    "marked": "^16.0.0"
+    "katex": "^0.16.22",
+    "marked": "^16.0.0",
+    "marked-katex-extension": "^5.1.5"
   }
 }
