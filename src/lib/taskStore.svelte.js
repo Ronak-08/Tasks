@@ -127,7 +127,7 @@ const firestoreUpdate = debounce(async (task, userId) => {
   } catch (error) {
     console.log("Firestore error", error);
   }
-}, 2000);
+}, 1000);
 
 export async function completedTask(itemToToggle) {
   const mainTaskIndex = tasks.findIndex(t => t.id === itemToToggle.id);

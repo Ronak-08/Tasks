@@ -32,7 +32,7 @@
   });
   let subtaskInput = $state("");
   let filtered = $derived(filteredTasks());
-  const HOLD_DURATION = 800;
+  const HOLD_DURATION = 700;
   let holdTimer = null;
 
 
@@ -171,21 +171,14 @@ onMount(loadTasks);
 {/if}
 
 {#if state.showModal}
-  <div class="overlay"></div>
+  <div onclick={() => (state.showModal = false)} class="overlay"></div>
   <div
     in:fly={{ y: 100, duration: 200 }}
     out:fly={{ y: 100, duration: 200 }}
     class="hiddenContainer"
   >
     <div class="high">
-      <md-outlined-icon-button
-        class="close"
-        role="button"
-        onclick={() => (state.showModal = false)}
-      ><md-icon class="material-symbols-rounded">close</md-icon
-        ></md-outlined-icon-button
-      >
-      <h2>Task</h2>
+      <h2>Add Task</h2>
       <md-filled-button form="form-id" class="add" type="submit">
         Save
       </md-filled-button>
@@ -211,7 +204,7 @@ onMount(loadTasks);
           oninput={(event) => (state.formData.description = event.target.value)}
         ></md-outlined-text-field>
 
-        <div class="wrap">
+        <div class="subtask-wrap">
           <input
             class="subtask-input"
             bind:value={subtaskInput}
@@ -242,7 +235,7 @@ onMount(loadTasks);
       {#if state.showOptions}
         <div class="misc">
           <div class="taskwrap">
-          <label for="due-date">Due date and time</label>
+          <label for="due-date">Due</label>
           <input
             id="due-date"
             type="datetime-local"
@@ -790,7 +783,7 @@ onMount(loadTasks);
     left: 0;
     bottom: 0;
     width: 100%;
-    height: 60%;
+    height: 40%;
     overflow: auto;
     z-index: 99;
     color: var(--md-sys-color-on-surface-container);
@@ -805,8 +798,7 @@ onMount(loadTasks);
     left: 0;
     width: 100%;
     height: 100%;
-    backdrop-filter: blur(4px);
-    background: rgba(0, 0, 0, 0.3);
+    background: rgba(0, 0, 0, 0.4);
     z-index: 98;
   }
   .subtask-list {
@@ -833,14 +825,24 @@ onMount(loadTasks);
   .subtask p {
     margin-left: 10px;
   }
+  .subtask-wrap {
+    display: flex;
+    gap: 5px;
+    margin-right: 1.5rem;
+    justify-content: space-evenly;
+
+  }
   .subtask-input {
     display: flex;
-    background-color: var(--md-sys-color-surface-container);
-    padding: var(--space-small);
-    border-radius: 11px;
-    padding: 15px;
+    border: 1px solid var(--md-sys-color-outline);
+    padding: 8px;
+    border-radius: 10px;
+    padding: 16px;
     margin: 1.2rem 0;
-    width: 75%;
+    transition: all 0.2s ease;
+  }
+  .subtask-input:focus {
+    border: 2px solid var(--md-sys-color-primary);
   }
   .subtask-btn {
     color: var(--md-sys-color-primary);

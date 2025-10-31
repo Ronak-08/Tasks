@@ -381,6 +381,25 @@ padding: 5px 10px 5px;
   color: var(--md-sys-color-primary);
 }
 
+@media (min-width: 710px) {
+ .navigation > * {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    padding: 0.3rem;
+  }
+md-icon.active {
+  background-color: var(--md-sys-color-primary-container);
+  font-variation-settings: "FILL" 1;
+  color: var(--md-sys-color-on-primary-container);
+}
+  md-icon {
+    padding: 5px 14px 5px 14px;
+  }
+p.active {
+  color: var(--md-sys-color-primary);
+}
+}
 @media (min-width: 768px) {
 .sideBar {
   display: flex;
