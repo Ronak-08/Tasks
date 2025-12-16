@@ -1,6 +1,6 @@
 # Task Master 📝
 
-A simple and fast app to manage your notes, tasks, and focus time, all in one place. Built with the latest web tech to be reliable and easy to use.
+A simple and fast app to manage your notes, tasks.
 
 **Live Demo:** [**https://tasksmaster01.netlify.app**](https://tasksmaster01.netlify.app)
 
@@ -9,8 +9,8 @@ A simple and fast app to manage your notes, tasks, and focus time, all in one pl
 ### ✨ Features
 
 *   **📝 Markdown Notes:** Write notes with markdown preview.
+*   **📒 Make Notebooks:** Make nested notes like notion.
 *   **✅ Simple Todos:** Keep track of your tasks and check them off as you go.
-*   **🍅 Pomodoro Timer:** Stay focused and manage your work sessions effectively.
 *   **☁️ Firebase Sync:** Your data is always synced across all your devices (optional, can work without it).
 *   **✈️ Offline Support:** Keep working even when the internet isn't. The app saves your changes locally and syncs when you're back online.
 *   **📱 PWA:** Install it on your phone or desktop for a native app-like experience.
@@ -20,9 +20,8 @@ A simple and fast app to manage your notes, tasks, and focus time, all in one pl
 ### 🛠️ Tech Stack
 
 *   **Framework:** **Svelte 5**
-*   **UI:** **Google's Material Web Components**.
-*   **Backend & Sync:** **Firebase** (Firestore & Authentication).
-*   **Markdown:** `marked` for parsing.
+*   **Backend & Sync:** **Firebase** (Firestore & Authentication) + Dexie.
+*   **Markdown:** `marked and dompurify` for parsing.
 
 ---
 
