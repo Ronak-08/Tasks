@@ -1,17 +1,25 @@
+const isBrowser = typeof window !== 'undefined';
 let db;
 let auth;
 let googleProvider;
+let signInWithPopup; 
+let createUserWithEmailAndPassword;
+let signInWithEmailAndPassword;
 
 export async function getFirebase() {
   if (db && auth) {
-    return { db, auth, googleProvider };
+    return { db, auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword };
   }
 
   const { initializeApp } = await import('firebase/app');
-  const { getFirestore } = await import('firebase/firestore');
-  const { getAuth, GoogleAuthProvider } = await import('firebase/auth');
+  const { 
+    getFirestore, 
+    initializeFirestore, 
+    persistentLocalCache, 
+    persistentMultipleTabManager 
+  } = await import('firebase/firestore');
   
-  // -------------------------
+  const AuthSDK = await import('firebase/auth');
 
   const firebaseConfig = {
     apiKey: import.meta.env.VITE_API_KEY,
@@ -23,10 +31,27 @@ export async function getFirebase() {
   };
 
   const app = initializeApp(firebaseConfig);
-  
-  db = getFirestore(app);
-  auth = getAuth(app);
-  googleProvider = new GoogleAuthProvider();
 
-  return { db, auth, googleProvider };
+  if (isBrowser) {
+    try {
+      db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch (err) {
+      console.warn("Persistence init failed, falling back to standard:", err);
+      db = getFirestore(app);
+    }
+  } else {
+    db = getFirestore(app);
+  }
+
+  auth = AuthSDK.getAuth(app);
+  googleProvider = new AuthSDK.GoogleAuthProvider();
+  signInWithPopup = AuthSDK.signInWithPopup;
+  createUserWithEmailAndPassword = AuthSDK.createUserWithEmailAndPassword;
+  signInWithEmailAndPassword = AuthSDK.signInWithEmailAndPassword;
+  
+  return { db, auth, googleProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword };
 }

@@ -1,214 +1,157 @@
 <script>
-import { goto } from "$app/navigation";
-import { getFirebase } from "$lib/firebase.js";
-import { onMount } from "svelte";
+import { goto } from '$app/navigation';
+    import Button from '$lib/components/Button.svelte';
+import { getFirebase } from '$lib/firebase';
+import Icon from "@iconify/svelte";
+import { GoogleAuthProvider } from 'firebase/auth';
 
-let email = $state('');
-let password = $state('');
-let isLogin = $state(true); 
-let errorMessage = $state(''); 
+let isLoginMode = $state(true);
+let email = $state("");
+let password = $state("");
+let errorMsg = $state("");
+let isLoading = $state(false);
 
-let auth, googleProvider;
-let isFirebaseReady = $state(false);
+let title = $derived(isLoginMode ? "Welcome Back" : "Create Account");
+let btnText = $derived(isLoginMode ? "Log In" : "Sign Up");
 
-onMount(async () => {
-  const firebase = await getFirebase();
-  auth = firebase.auth;
-  googleProvider = firebase.googleProvider;
-  isFirebaseReady = true; 
-});
+async function handleGoogle() {
+  isLoading = true;
+  errorMsg = "";
 
-async function handleSubmit(event) {
-  event.preventDefault(); 
-  if (!isFirebaseReady) return; 
-
-  errorMessage = '';
-  if (!email || !password) {
-    errorMessage = "Please enter both email and password.";
-    return;
-  }
   try {
-    const { 
-      signInWithEmailAndPassword, 
-      createUserWithEmailAndPassword 
-    } = await import("firebase/auth");
+    const { auth,googleProvider, signInWithPopup } = await getFirebase(); // Get auth instance
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+    goto('/');
+  } catch (err) {
+    console.error(err);
+    errorMsg = "Google Login Failed: " + err.message;
+  } finally {
+    isLoading = false;
+  }
+}
 
-    if (isLogin) {
+async function handleEmail(e) {
+  e.preventDefault(); 
+  isLoading = true;
+  errorMsg = "";
+
+  try {
+    const { auth, createUserWithEmailAndPassword,signInWithEmailAndPassword  } = await getFirebase();
+
+    if (isLoginMode) {
       await signInWithEmailAndPassword(auth, email, password);
     } else {
       await createUserWithEmailAndPassword(auth, email, password);
     }
-    goto("/"); 
-  } catch (error) {
-    console.error('Authentication error:', error.code, error.message);
-    switch (error.code) {
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        errorMessage = 'Invalid email or password.';
-        break;
-      case 'auth/email-already-in-use':
-        errorMessage = 'This email address is already in use.';
-        break;
-      case 'auth/weak-password':
-        errorMessage = 'Password should be at least 6 characters.';
-        break;
-      default:
-        errorMessage = 'An unexpected error occurred. Please try again.';
-    }
-  }
-}
 
-async function handleGoogleSignIn() {
-  if (!isFirebaseReady) return;
-  try {
-   const { signInWithPopup } = await import("firebase/auth");
-
-    await signInWithPopup(auth, googleProvider);
-    goto("/");
-  } catch (error) {
-    console.error("Google sign-in error:", error);
-    errorMessage = "Failed to sign in with Google. Please try again.";
+    goto('/');
+  } catch (err) {
+    console.error(err);
+    errorMsg = err.message.replace("Firebase: ", "");
+  } finally {
+    isLoading = false;
   }
 }
 </script>
 
-<main class="auth-container">
-  <h1>{isLogin ? "Welcome Back!" : "Create an Account"}</h1>
+<div class="flex min-h-full w-full items-center justify-center p-4 bg-surface">
+  <div class="w-full max-w-[400px] rounded-2xl bg-surface-container p-6 md:p-8 shadow-xl border border-outline-variant/20">
+    <div class="mb-6 md:mb-8 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">
+        {title}
+      </h1>
+    </div>
 
-  <button class="google-btn" onclick={handleGoogleSignIn} disabled={!isFirebaseReady} >
-    <md-ripple></md-ripple>
-    <img src="/google-logo.svg" alt="Google logo" /> 
-    Continue with Google
-  </button>
+    {#if errorMsg}
+      <div class="mb-6 rounded-lg bg-error-container p-3 text-sm font-medium text-on-error-container text-center animate-pulse">
+        {errorMsg}
+      </div>
+    {/if}
 
-  <div class="divider">
-    <span>OR</span>
-  </div>
+    <form onsubmit={handleEmail} class="flex flex-col gap-4">
+      <label class="block">
+        <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/80 ml-1">Email</span>
+        <input 
+          class="
+            w-full mt-1 px-4 py-3 rounded-xl 
+            bg-surface-container-high 
+            border-2 border-transparent focus:border-primary 
+            outline-none text-on-surface placeholder:text-on-surface-variant/50
+            transition-all
+          " 
+          type="email" 
+          placeholder="user@example.com" 
+          bind:value={email} 
+          required
+        />
+      </label>
 
-  <div class="email-signup">
-    <form onsubmit={handleSubmit}>
-      <fieldset>
-        <div class="form-field">
-          <label for="email">Email</label>
-          <input id="email" type="email" placeholder="you@example.com" bind:value={email} required />
-        </div>
-        <div class="form-field">
-          <label for="password">Password</label>
-          <input id="password" placeholder="••••••••" type="password" bind:value={password} required />
-        </div>
-      </fieldset>
+      <label class="block">
+        <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant/80 ml-1">Password</span>
+        <input 
+          class="
+            w-full mt-1 px-4 py-3 rounded-xl 
+            bg-surface-container-high 
+            border-2 border-transparent focus:border-primary 
+            outline-none text-on-surface placeholder:text-on-surface-variant/50
+            transition-all
+          " 
+          type="password" 
+          placeholder="••••••••" 
+          bind:value={password} 
+          required
+        />
+      </label>
 
-      {#if errorMessage}
-        <p class="error-message">{errorMessage}</p>
-      {/if}
-
-      <md-filled-button type="submit" class="submitBtn" disabled={!isFirebaseReady}>
-        {#if !isFirebaseReady}
-          Loading...
-        {:else if isLogin}
-          Log In
-        {:else}
-          Sign Up
+      <Button 
+        type="submit" 
+        variant="filled"
+        class="w-full py-3 mt-2 text-sm md:text-base shadow-md"
+        disabled={isLoading}
+      >
+        {#if isLoading}
+          <Icon icon="svg-spinners:ring-resize" class="mr-2"/>
         {/if}
-      </md-filled-button>
+        {btnText}
+      </Button>
     </form>
-  </div>
 
-  <div class="toggle-mode">
-    <p>{isLogin ? "Don't have an account?" : "Already have an account?"}</p>
-    <md-text-button onclick={() => isLogin = !isLogin}>
-      {isLogin ? 'Sign Up' : 'Log In'}
-    </md-text-button>
-  </div>
-</main>
+    <div class="relative my-6 text-center">
+      <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-outline-variant/50"></div>
+      </div>
+      <span class="relative bg-surface-container px-3 text-xs text-on-surface-variant/70 uppercase font-medium">
+        Or continue with
+      </span>
+    </div>
 
-<style>
-.auth-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  max-width: 450px;
-  margin: 20px auto;
-  gap: 1rem;
-  padding-top: 1rem;
-}
-.email-signup form, fieldset {
-  border: none;
-  padding: 10px;
-  background-color: var(--md-sys-color-surface-container);
-  border-radius: 16px;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  width: 100%;
-}
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.error-message {
-  color: red;
-  font-size: 0.9em;
-  text-align: center;
-  margin: -8px 0 8px 0;
-}
-.toggle-mode {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 0.5rem;
-  font-size: 0.9rem;
-}
-h1 {
-  font-size: 2rem;
-  text-wrap: nowrap;
-  margin: 0.8rem;
-  font-weight: 600;
-}
-form {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-}
-.google-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
-  border-radius: 99px;
-  padding: 0.7rem 1rem;
-  position: relative;
-  margin: 1rem;
-}
-img {
-  width: 23px;
-}
-input {
-  padding: 0.8rem;
-  border-radius: 16px;
-  width: 100%;
-  background-color: var(--md-sys-color-surface-container-high);
-  transition: all 0.3s ease;
-}
-input:hover {
-  border: 2px solid var(--md-sys-color-primary);
-}
-md-filled-button {
-  width: 40%;
-  margin-bottom: var(--space-small);
-}
-label {
-  font-size: 0.9rem;
-  color: var(--md-sys-color-tertiary);
-  margin: 0.4rem 0;
-}
-fieldset {
-  margin: 8px;
-}
-.submitBtn {
-  width: 90%;
-}
-</style>
+    <button 
+      onclick={handleGoogle} 
+      type="button" 
+      disabled={isLoading}
+      class="
+        w-full py-2.5 border border-outline-variant/50 
+        flex items-center justify-center gap-2
+        text-on-surface font-medium hover:bg-surface-container-high
+        transition-colors
+      "
+    >
+      <Icon icon="devicon:google" class="text-lg" />
+      <span>Google</span>
+    </button>
+
+    <div class="mt-8 text-center text-sm">
+      <span class="text-on-surface-variant">
+        {isLoginMode ? "Don't have an account?" : "Already have an account?"}
+      </span>
+      <button 
+        class="ml-1 font-bold text-primary hover:text-primary-fixed-dim transition-colors"
+        onclick={() => isLoginMode = !isLoginMode}
+      >
+        {isLoginMode ? "Sign Up" : "Log In"}
+      </button>
+    </div>
+
+  </div>
+</div>

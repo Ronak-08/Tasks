@@ -10,19 +10,26 @@
     "prepare": "svelte-kit sync"
   },
   "devDependencies": {
-    "@sveltejs/adapter-netlify": "latest",
+    "@iconify-json/material-symbols": "^1.2.50",
+    "@iconify/svelte": "^5.1.0",
+    "@sveltejs/adapter-netlify": "^5.2.4",
     "@sveltejs/kit": "latest",
     "@sveltejs/vite-plugin-svelte": "latest",
     "rollup-plugin-visualizer": "latest",
     "svelte": "latest",
+    "unplugin-icons": "^22.5.0",
     "vite": "latest"
   },
   "dependencies": {
-    "@material/web": "^2.3.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/vite": "^4.1.17",
+    "dexie": "^4.2.1",
     "dompurify": "^3.2.6",
     "firebase": "^11.9.1",
-    "katex": "^0.16.22",
-    "marked": "^16.0.0",
-    "marked-katex-extension": "^5.1.5"
+    "isomorphic-dompurify": "^2.33.0",
+    "katex": "^0.16.25",
+    "marked": "^16.4.2",
+    "marked-katex-extension": "^5.1.6",
+    "tailwindcss": "^4.1.17"
   }
 }
