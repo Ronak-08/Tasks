@@ -31,7 +31,7 @@ onMount(async() => {
         </div>
         <div class="flex-none md:hidden">
           {#if appState.authLoading}
-            <div class="h-9 w-9 rounded-full animate-pulse bg-surface-container-high"></div>
+            <div class="h-9 w-9 mx-auto rounded-full animate-pulse bg-surface-container-high"></div>
           {:else if appState.user}
             <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
             <div 
