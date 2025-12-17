@@ -107,7 +107,7 @@ async function create() {
 
       </div>
     {:else}
-      <div class="p-8 col-span-2 text-center text-on-surface-variant/60 italic">
+      <div class="p-8 w-full col-span-full text-center text-on-surface-variant/60 italic">
         No notebooks found.
       </div>
     {/each}

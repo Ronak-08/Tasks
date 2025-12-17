@@ -68,7 +68,7 @@ ${task.priority === 'high' ? 'bg-secondary-container/80' : task.priority === "lo
           }}
         >
 
-          <span class={`font-medium truncate ${sub.completed ? 'line-through text-on-surface/30' : 'text-on-surface-variant'}`}>
+          <span class={`font-medium transition truncate ${sub.completed ? 'line-through text-on-surface/30' : 'text-on-surface-variant'}`}>
             {sub.title}
           </span>
 

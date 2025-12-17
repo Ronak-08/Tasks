@@ -211,13 +211,13 @@ class AppState {
     }
   }
 
-  async updateNote(id, data) {
+async updateNote(id, data) {
+    const payload = { ...data, updatedAt: serverTimestamp() };
+
     if (this.user) {
       const { db } = await getFirebase();
-      await updateDoc(doc(db, 'users', this.user.uid, 'notes', id), { 
-        ...data, 
-        updatedAt: serverTimestamp() 
-      });
+      const noteRef = doc(db, 'users', this.user.uid, 'notes', id);
+      updateDoc(noteRef, payload).catch(e => console.error("Save failed", e));
     } else {
       await localDB.notes.update(id, { ...data, updatedAt: new Date().toISOString() });
       this.notes = this.notes.map(n => n.id === id ? { ...n, ...data } : n);

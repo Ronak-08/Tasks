@@ -174,7 +174,7 @@ function handleAdd(e) {
     </div>
 
 
-    <div class="mt-1 md:mt-0">
+    <div class="mt-1 md:mt-0 ">
       
       <button 
         onclick={() => {showAccordion = !showAccordion; isUpdating = false}}
@@ -194,7 +194,7 @@ function handleAdd(e) {
       {#if showAccordion}
         <div 
           id="accordion-content"
-          class="space-y-2 bg-surface-container-low p-2 rounded-xl"
+          class="space-y-2 bg-surface-container-low overflow-y-auto max-h-[20vh] pb-16 md:max-h-full p-2 rounded-xl"
           transition:slide={{ duration: 200 }}
         >
           {#each completedTasks as task (task.id)}
@@ -214,7 +214,7 @@ function handleAdd(e) {
                   <p class="text-xs text-on-surface-variant/80 truncate">{task.desc}</p>
                 {/if}
               </div>
-              <button onclick={() => appState.deleteTask(task.id)} class="btn text-error p-2">
+              <button onclick={() => appState.deleteTask(task.id)} class="transition-all active:scale-98 active:border rounded-full text-error p-1">
                 <Delete class="text-base" />
               </button>
             </div>
@@ -252,7 +252,7 @@ function handleAdd(e) {
         {#if isUpdating}
           <button 
             type="button" 
-            class="border border-outline-variant p-1 rounded-full text-error"
+            class="border border-outline-variant p-1 hover:opacity-90 rounded-full text-error"
             onclick={() => { if(confirm("Delete task?")) { appState.deleteTask(editingId); close(); }}}
           >
             <Delete class="text-base"/>

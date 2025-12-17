@@ -16,7 +16,8 @@ marked.use({
   gfm: true,
 })
 
-let content = $state("");
+let content = $state(note.content || "");
+let lastId = $state(note.id);
 let renderHtml = $derived(content ? DOMPurify.sanitize(marked.parse(content)) : "");
 let timer;
 
@@ -39,13 +40,16 @@ async function scrollToBottom() {
 function handleInput(e) {
   content = e.target.value;
   clearTimeout(timer);
-  timer = setTimeout(async () => {
-    await appState.updateNote(note.id, {content: content});
+  timer = setTimeout(() => {
+    appState.updateNote(note.id, {content: content});
   }, 1000) 
 }
 
 $effect(() => {
+  if(note.id !== lastId) {
   content = note.content || "";
+  lastId = note.id
+  }
 })
 </script>
 
