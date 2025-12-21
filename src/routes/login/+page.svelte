@@ -19,7 +19,7 @@ async function handleGoogle() {
   errorMsg = "";
 
   try {
-    const { auth,googleProvider, signInWithPopup } = await getFirebase(); // Get auth instance
+    const { auth,googleProvider, signInWithPopup } = await getFirebase();
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
     goto('/');
@@ -56,7 +56,8 @@ async function handleEmail(e) {
 </script>
 
 <div class="flex min-h-full w-full items-center justify-center p-4 bg-surface">
-  <div class="w-full max-w-[400px] rounded-2xl bg-surface-container p-6 md:p-8 shadow-xl border border-outline-variant/20">
+  <div class="w-full flex flex-col lg:h-fit lg:gap-3 lg:flex-row max-w-[400px] lg:max-w-full rounded-2xl bg-surface-container p-6 md:p-8 shadow-xl border border-outline-variant/20">
+    <div class="flex flex-col">
     <div class="mb-6 md:mb-8 text-center">
       <h1 class="text-2xl md:text-3xl font-bold text-on-surface tracking-tight">
         {title}
@@ -106,8 +107,7 @@ async function handleEmail(e) {
 
       <Button 
         type="submit" 
-        variant="filled"
-        class="w-full py-3 mt-2 text-sm md:text-base shadow-md"
+        class="w-full mt-2 text-md md:text-base shadow-md"
         disabled={isLoading}
       >
         {#if isLoading}
@@ -116,8 +116,9 @@ async function handleEmail(e) {
         {btnText}
       </Button>
     </form>
+      </div>
 
-    <div class="relative my-6 text-center">
+    <div class="relative my-6 text-center lg:hidden">
       <div class="absolute inset-0 flex items-center">
         <div class="w-full border-t border-outline-variant/50"></div>
       </div>
@@ -126,20 +127,17 @@ async function handleEmail(e) {
       </span>
     </div>
 
-    <button 
+    <div class="flex flex-col lg:items-center lg:w-[50%] lg:h-full md:m-5">
+    <Button 
       onclick={handleGoogle} 
       type="button" 
       disabled={isLoading}
-      class="
-        w-full py-2.5 border border-outline-variant/50 
-        flex items-center justify-center gap-2
-        text-on-surface font-medium hover:bg-surface-container-high
-        transition-colors
-      "
+      variant='outline'
+      class='w-full'
     >
       <Icon icon="devicon:google" class="text-lg" />
       <span>Google</span>
-    </button>
+    </Button>
 
     <div class="mt-8 text-center text-sm">
       <span class="text-on-surface-variant">
@@ -152,6 +150,7 @@ async function handleEmail(e) {
         {isLoginMode ? "Sign Up" : "Log In"}
       </button>
     </div>
+      </div>
 
   </div>
 </div>

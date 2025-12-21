@@ -1,5 +1,5 @@
 <script>
-let { children, class: className, variant = "filled", size = 10, ...rest} = $props();
+let { children, class: className, variant = "filled", ...rest} = $props();
 
 const styles = {
   filled: "bg-primary text-on-primary hover:bg-primary/90",
@@ -11,7 +11,7 @@ let variantClass = $derived(styles[variant] || styles.filled);
 
 </script>
 
-<button class="absolute flex justify-center active:brightness-90 items-center shadow-lg rounded-lg p-2 {variantClass} {className}" 
+<button class="absolute flex justify-center active:brightness-90 items-center shadow-lg rounded-2xl p-2 {variantClass} {className}" 
   {...rest}
 >
   {@render children()} 

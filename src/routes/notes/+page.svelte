@@ -7,6 +7,7 @@ import Add from "~icons/material-symbols/add";
 import Check from "~icons/material-symbols/check";
 import NoteRow from '$lib/components/NoteRow.svelte';
 import { fade } from 'svelte/transition';
+    import Button from '$lib/components/Button.svelte';
 
 let rootNotes = $derived(appState.notes.filter(n => !n.parentId));
 let filteredList = $derived(
@@ -47,26 +48,26 @@ async function create() {
 
 <div class="h-full p-4 md:px-5 mx-2 select-none">
   <header class="flex justify-between items-center mb-8">
-    <h1 class="text-xl font-medium text-on-surface">
+    <h1 class="text-xl md:text-2xl md:mx-1 font-medium text-on-surface">
       Notebooks
     </h1>
-    <div class="flex gap-2">
+    <div class="flex gap-1">
       {#if isSelecting}
-        <button class="p-1 px-2 bg-error-container disabled:opacity-50 text-on-error-container rounded-lg" disabled={selected.length === 0} onclick={batchDelete}>Delete ({selected.length})</button>
-        <button 
-          class="bg-surface-container p-2 rounded-xl" 
+        <button class="p-2 px-3 transition duration-300 active:scale-[0.99] active:opacity-95 active:rounded-full bg-error-container disabled:opacity-50 text-on-error-container rounded-xl" disabled={selected.length === 0} onclick={batchDelete}>Delete ({selected.length})</button>
+        <Button 
+          variant='normal'
           onclick={() => { isSelecting = false; selected = []; }}>
           <Close />
-        </button>
+        </Button>
       {:else}
         {#if rootNotes.length > 0}
-          <button onclick={() => isSelecting = true} class="p-2 rounded-lg bg-surface-container">
+          <Button variant='normal' onclick={() => isSelecting = true} class="rounded-lg">
             <Select class="h-6 w-6" />
-          </button>
+          </Button>
         {/if} 
-        <button class="p-2 rounded-lg bg-primary text-on-primary" onclick={create}>
+        <Button class="md:hidden rounded-lg" onclick={create}>
           <Add class="h-6 w-6" />
-        </button>
+        </Button>
       {/if}
     </div>
   </header>
@@ -89,7 +90,6 @@ async function create() {
         <div class={isSelecting ? 'pointer-events-none' : ''}>
           <NoteRow 
             {note} 
-            hasChildren={appState.notes.some(n => n.parentId == note.id)} 
           />
         </div>
         {#if isSelecting}
@@ -107,8 +107,8 @@ async function create() {
 
       </div>
     {:else}
-      <div class="p-8 w-full col-span-full text-center text-on-surface-variant/60 italic">
-        No notebooks found.
+      <div class="p-8 w-full col-span-full text-center text-on-surface-variant/60">
+        No notebooks found
       </div>
     {/each}
   </div>

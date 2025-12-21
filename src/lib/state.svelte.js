@@ -1,5 +1,6 @@
 import { browser } from '$app/environment';
 import { getFirebase } from '$lib/firebase';
+import {goto} from '$app/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { 
   collection, query, onSnapshot, orderBy, 
@@ -15,8 +16,17 @@ class AppState {
   authLoading = $state(true);
   searchQuery = $state("");
   initialized = false;
-
+  showModal = $state(false);
   unsubs = [];
+
+ async handleAction(path) {
+    if(path === '/') {
+    this.showModal = !this.showModal;
+    } else if(path.startsWith('/notes')) {
+      const newId = await this.addNote(null);
+      goto(`/notes/${newId}`);
+    } 
+  }
 
   async init() {
     if (this.initialized) return;

@@ -14,13 +14,14 @@ import Label from "~icons/material-symbols/label-outline"
 import Button from '$lib/components/Button.svelte';
 import Checkbox from '$lib/components/Checkbox.svelte';
 import FAB from '$lib/components/FAB.svelte';
-    import TaskRow from '$lib/components/TaskRow.svelte';
+import TaskRow from '$lib/components/TaskRow.svelte';
+    import { tick } from 'svelte';
 
+let taskInput = $state();
 let newTaskTitle = $state("");
 let showAccordion = $state(false);
 let editingId = $state(null);
 let newTaskDesc = $state("");
-let showModal = $state(false);
 let isUpdating = $state(false);
 let priority = $state("medium");
 let dueDate = $state(null);
@@ -85,8 +86,10 @@ function handleSubtaskKeydown(e) {
 }
 
 
-function show(task) {
-  showModal = true;
+async function show(task) {
+  appState.showModal = true;
+  await tick();
+  if(taskInput) taskInput.focus();
   isUpdating = true;
   newTaskTitle = task.title || "";
   newTaskDesc = task.desc || "";
@@ -97,7 +100,7 @@ function show(task) {
   tempSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : [];
 }
 function close() {
-  showModal = false;
+  appState.showModal = false;
   isUpdating = false;
   newTaskTitle = "";
   tempTags = [];
@@ -127,7 +130,7 @@ function handleAdd(e) {
     appState.addTask({ title: newTaskTitle, desc: newTaskDesc, priority: priority, dueDate: dueDate, tags: $state.snapshot(tempTags), subtasks: $state.snapshot(tempSubtasks) });
     newTaskTitle = "";
     newTaskDesc = "";
-    showModal = false;
+    appState.showModal = false;
     tempTags = [];
     tempSubtasks = [];
   }
@@ -136,9 +139,9 @@ function handleAdd(e) {
 </script>
 
 <main class="mx-auto p-4 md:px-5 h-full">
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:max-w-4xl lg:mx-auto gap-4 md:gap-9 items-start">
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:max-w-5xl lg:mx-auto gap-4 md:gap-9 items-start">
     <div class="flex flex-col space-y-2 h-full overflow-y-auto">
-      
+
       <div class="flex justify-between md:bg-surface-container md:px-2 rounded-xl mb-4 items-center flex-row">
         <p class="p-3 text-[0.9rem] font-medium text-primary">Tasks</p>
         <div class="relative px-2 py-1 bg-surface-container-high rounded-2xl flex items-center">
@@ -160,7 +163,7 @@ function handleAdd(e) {
         <div class="text-center p-2 text-on-surface-variant/80 py-10">
           <p>All Tasks Completed</p>
         </div>
-      {:else if activeTasks.length === 0} 
+      {:else if filteredList.length === 0} 
         <div class="text-center justify-center items-center flex gap-3 p-2 text-on-surface-variant/80 py-10">
           <p>Not found</p>
         </div>
@@ -175,7 +178,7 @@ function handleAdd(e) {
 
 
     <div class="mt-1 md:mt-0 ">
-      
+
       <button 
         onclick={() => {showAccordion = !showAccordion; isUpdating = false}}
         aria-expanded={showAccordion}
@@ -194,13 +197,13 @@ function handleAdd(e) {
       {#if showAccordion}
         <div 
           id="accordion-content"
-          class="space-y-2 bg-surface-container-low overflow-y-auto max-h-[20vh] pb-16 md:max-h-full p-2 rounded-xl"
+          class="space-y-2 bg-surface-container-low overflow-y-auto max-h-[20vh] pb-3 md:max-h-full p-2 rounded-xl"
           transition:slide={{ duration: 200 }}
         >
           {#each completedTasks as task (task.id)}
             <div 
               animate:flip={{ duration: 200 }} 
-              class="flex items-center opacity-70 hover:opacity-100 transition-opacity justify-between p-2 mx-1 rounded-2xl bg-surface-container-low">
+              class="flex items-center opacity-70 hover:scale-[1.02] transition-all justify-between p-2 mx-1 rounded-2xl bg-surface-container-low">
               <Checkbox 
                 class="mr-4" 
                 checked={task.completed}
@@ -214,8 +217,8 @@ function handleAdd(e) {
                   <p class="text-xs text-on-surface-variant/80 truncate">{task.desc}</p>
                 {/if}
               </div>
-              <button onclick={() => appState.deleteTask(task.id)} class="transition-all active:scale-98 active:border rounded-full text-error p-1">
-                <Delete class="text-base" />
+              <button onclick={() => appState.deleteTask(task.id)} class="transition-all active:scale-98 rounded-full text-error p-1 opacity-40 hover:opacity-100">
+                <Delete class=" text-base" />
               </button>
             </div>
           {/each}
@@ -226,14 +229,14 @@ function handleAdd(e) {
 </main>
 
 <FAB 
-  onclick={() => showModal = !showModal}
+  onclick={() => appState.showModal = !appState.showModal}
   variant="filled"
-  class="bottom-5 md:bottom-3 md:size-16 size-13 right-3"
+  class="bottom-5 md:hidden size-16 right-4"
 >
   <Add class="size-6" />
 </FAB>
 
-{#if showModal}
+{#if appState.showModal}
   <div
     class="fixed inset-0 bg-black/70 z-40 transition-opacity"
     onclick={close}
@@ -242,7 +245,7 @@ function handleAdd(e) {
   ></div>
 
   <div 
-    class="fixed bottom-0 md:w-full md:max-w-[60%] md:left-[20%] left-0 right-0 z-60 bg-surface-container rounded-t-3xl shadow-2xl overflow-hidden"
+    class="fixed bottom-0 md:w-full md:max-w-[60%] lg:max-w-[40%] md:left-[20%] left-0 right-0 z-60 bg-surface-container rounded-t-3xl shadow-2xl overflow-hidden"
     role="dialog"
     aria-modal="true"
     transition:slide={{ axis: 'y', duration: 250 }}
@@ -261,7 +264,7 @@ function handleAdd(e) {
           <div></div>
         {/if}
 
-        <Button type="submit" variant="filled">
+        <Button type="submit" class='px-3' variant="filled">
           {isUpdating ? 'Save' : 'Create'}
         </Button>
       </div>
@@ -270,6 +273,7 @@ function handleAdd(e) {
         <input 
           type="text" 
           bind:value={newTaskTitle}
+          bind:this={taskInput}
           placeholder="What needs to be done?" 
           class="w-full bg-transparent border-0 p-0 mb-4 text-xl font-semibold placeholder-on-surface-variant focus:ring-0 text-on-surface"
           required
@@ -281,23 +285,23 @@ function handleAdd(e) {
           class="w-full mt-1 bg-transparent border-0 p-0 text-sm text-on-surface-variant placeholder-on-surface-variant/80 outline-none resize-none"
         ></textarea>
 
-    {#if isUpdating}
-    <input 
-      type="text" 
-      bind:value={subTaskInput}
-      onkeydown={handleSubtaskKeydown}
-      placeholder="Add subtask..." 
-      class="w-full mb-2 bg-transparent border-0 p-0 text-sm text-surface-200 placeholder-on-surface-variant focus:ring-0"
-    />
-  {/if}
+        {#if isUpdating}
+          <input 
+            type="text" 
+            bind:value={subTaskInput}
+            onkeydown={handleSubtaskKeydown}
+            placeholder="Add subtask" 
+            class="w-full mb-2 bg-transparent border-0 p-0 text-sm text-on-surface-variant placeholder-on-surface-variant focus:ring-0"
+          />
+        {/if}
         {#if showTagInput}
           <input 
             transition:fade={{duration: 100}}
             type="text" 
             bind:value={tagInput}
             onkeydown={addTag}
-            placeholder="Add tags" 
-            class="w-full bg-transparent border-0 mb-4 p-0 text-[13px] text-on-surface-variant placeholder-on-surface-variant/70 focus:ring-0"
+            placeholder="Add tags (Press Enter)" 
+            class="w-full bg-transparent border-0 mb-4 p-0 text-sm text-on-surface-variant placeholder-on-surface-variant/70 focus:ring-0"
           />
         {/if}
       </div>

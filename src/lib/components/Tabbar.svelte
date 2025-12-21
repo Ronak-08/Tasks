@@ -5,7 +5,9 @@ import IconHomeFilled from '~icons/material-symbols/home';
 import IconNotesOutline from '~icons/material-symbols/note-stack-outline';
 import IconNotesFilled from '~icons/material-symbols/note-stack';
 import Account from "~icons/material-symbols/person-add";
-    import { appState } from "$lib/state.svelte";
+import Add from "~icons/material-symbols/add"
+import FAB from "./FAB.svelte";
+import { appState } from "$lib/state.svelte";
 
 let path = $derived($page.url.pathname);
 
@@ -21,10 +23,17 @@ function isActive(href) {
 </script>
 
 <nav class="
-  flex flex-row z-50 bg-surface-container-low border-outline-variant/20 
-  w-full h-[70px] border-t
-  md:w-24 lg:w-28 md:h-full md:flex-col md:justify-between md:py-3 md:border-r md:border-t-0
-  ">
+  flex flex-row z-50 bg-surface-container-low border-outline-variant/30 
+  w-full h-[66px] border-t
+  md:w-24 lg:w-28 md:h-full md:flex-col md:justify-between md:items-center md:py-3 md:border-r md:border-t-0
+  ">  
+<FAB 
+  onclick={() => {appState.handleAction(path)}}
+  variant="filled"
+  class="hidden md:flex p-3 mt-2 relative"
+>
+  <Add class="size-6" />
+</FAB>
   <div class="
     flex items-center justify-around w-full h-full
     md:flex-col md:justify-start md:gap-3 md:pt-6
@@ -37,16 +46,16 @@ function isActive(href) {
         href={link.href} 
         class="
          flex flex-col items-center justify-center gap-1 
-        w-14 h-full md:w-full md:h-auto md:py-2
+        w-13 h-full md:w-full md:h-auto md:py-2
         transition-opacity hover:opacity-100 outline-none
         "
       >
         <div class="
           flex items-center justify-center rounded-full transition-colors duration-200
-          w-16 h-8 md:w-14 md:h-8
+          w-15 h-8 md:w-14 md:h-8
           {active 
             ? 'bg-primary-container/80 text-on-primary-container' 
-            : 'text-on-surface-variant group-hover:bg-on-surface/10'}
+            : 'text-on-surface-variant hover:bg-on-surface/10'}
           ">
           <IconComponent class="text-xl" />
         </div>
@@ -54,7 +63,7 @@ function isActive(href) {
         <span class="
           text-[11px] font-medium truncate max-w-full px-1
           transition-colors duration-200
-          {active ? 'text-on-surface' : 'text-on-surface-variant'}
+          {active ? 'text-on-surface font-semibold' : 'text-on-surface-variant'}
           ">
           {link.label}
         </span>
@@ -71,14 +80,14 @@ function isActive(href) {
       class="flex flex-col justify-center items-center"
     >
       <img aria-label={appState.user.displayName} class="rounded-full text-center object-cover size-9 border border-outline-variant" src={appState.user.photoURL} alt={appState.user.displayName} />
-        <button class="border border-outline-variant cursor-pointer mt-2 px-2 py-1 text-sm rounded-full" onclick={() => appState.logout()}>Sign out</button>
+        <button class="border border-outline-variant transition active:rounded-xl cursor-pointer mt-2 px-3 py-1 text-sm rounded-full" onclick={() => appState.logout()}>Sign out</button>
     </div>
 
 {:else}
   <a 
     href="/login" 
     class="
-      flex items-center justify-center border border-outline-variant py-2 px-3 w-fit mx-auto rounded-full
+      flex items-center justify-center border border-outline-variant py-2 px-3 w-fit mx-auto rounded-full active:rounded-xl
       hover:bg-on-surface/10 transition outline-none
       text-on-surface-variant 
     "

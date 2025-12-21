@@ -1,7 +1,7 @@
 <script>
 import { fade } from 'svelte/transition';
 
-let { note, hasChildren } = $props();
+let { note } = $props();
 
 
 </script>

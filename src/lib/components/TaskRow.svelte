@@ -19,8 +19,8 @@ function toggleSubtask(task, subTaskId) {
 function getDateColor(dateStr) {
   if (!dateStr) return '';
   const today = new Date().toISOString().split('T')[0];
-  if (dateStr < today) return 'text-error-400';
-  if (dateStr === today) return 'text-primary-400'; 
+  if (dateStr < today) return 'text-error';
+  if (dateStr === today) return 'text-primary'; 
   return 'text-surface-400'; 
 }
 </script>
@@ -30,20 +30,22 @@ function getDateColor(dateStr) {
   <div 
     role="cell"
     transition:fly={{ y: 20, duration: 200 }}
-    class={`p-4 md:py-3 mx-1 rounded-2xl flex items-center justify-between group
-${task.priority === 'high' ? 'bg-secondary-container/80' : task.priority === "low" ? "bg-surface-container-low" : 'bg-surface-container'}`}
+    class={`p-3 px-4 md:py-3 mx-1 rounded-2xl flex items-center justify-between group
+${task.priority === 'high' ? 'bg-secondary-container/70' : task.priority === "low" ? "bg-surface-container-low" : 'bg-surface-container'}`}
     onclick={() => onShow(task)}
     onkeyup={() => {}}
     tabindex="0"
   >
     <div class="flex flex-col">
-      <span class={`${task.priority === 'high' ? 'text-on-secondary-container' : 'text-on-surface'} `} >{task.title}</span>
+      <span class={` font-medium ${task.priority === 'high' ? 'text-on-secondary-container' : 'text-on-surface'} `} >{task.title}</span>
       <div class="flex items-center gap-1 mt-1 text-xs">
         {#if task.dueDate}
-          <span class="flex items-center gap-1 {getDateColor(task.dueDate)}">
+          <span class="flex items-center font-thin gap-1 {getDateColor(task.dueDate)}">
             {new Date(task.dueDate).toLocaleDateString('en-US', {month:'short', day:'numeric'})}
           </span>
+          {#if task.desc}
           <span class="text-on-surface/70">•</span>
+          {/if}
         {/if}
         {#if task.desc}
           <span class="text-on-surface-variant truncate max-w-[155px]">{task.desc}</span>
@@ -57,18 +59,18 @@ ${task.priority === 'high' ? 'bg-secondary-container/80' : task.priority === "lo
   </div>
 
   {#if task.subtasks && task.subtasks.length > 0}
-    <div class="flex max-h-40 mx-4 my-2 overflow-auto flex-col gap-1">
+    <div class="flex max-h-36 mt-3 mx-4 my-2 p-1 overflow-auto flex-col gap-1">
       {#each task.subtasks as sub (sub.id)}
         <div 
           role="button"
-          class="flex items-center gap-3 p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-colors cursor-pointer"
+          class="flex items-center gap-2 hover:rounded-2xl p-2 rounded-lg bg-surface-container-low hover:bg-surface-container-high transition-all hover:scale-[1.01] cursor-pointer"
           onclick={(e) => {
             e.stopPropagation(); 
             toggleSubtask(task, sub.id); 
           }}
         >
 
-          <span class={`font-medium transition truncate ${sub.completed ? 'line-through text-on-surface/30' : 'text-on-surface-variant'}`}>
+          <span class={`font-medium transition truncate ${sub.completed ? 'line-through font-thin text-on-surface/30' : 'text-on-surface-variant'}`}>
             {sub.title}
           </span>
 

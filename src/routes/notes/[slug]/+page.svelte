@@ -4,15 +4,27 @@ import { goto } from '$app/navigation';
 import { appState } from '$lib/state.svelte.js';
 
 import Add from "~icons/material-symbols/add";
+import Preview from "~icons/material-symbols/preview";
+import Back from "~icons/material-symbols/arrow-back";
+import Right from "~icons/material-symbols/chevron-right";
+import Edit from "~icons/material-symbols/edit-square-outline";
 import Delete from "~icons/material-symbols/delete";
 import Note from "~icons/material-symbols/note-outline";
 import NoteRow from '$lib/components/NoteRow.svelte';
 import MarkdownEditor from '$lib/components/MarkdownEditor.svelte';
+import ButtonGroup from '$lib/components/ButtonGroup.svelte';
 import Button from '$lib/components/Button.svelte';
+    import Loader from '$lib/components/Loader.svelte';
 
 const id = $derived($page.params.slug);
 const note = $derived(appState.notes.find(n => n.id == id));
+let edit = $state(true);
+let Icon = $derived(edit ? Edit : Preview );
 let children = $derived(appState.notes.filter(n => n.parentId === id))
+let headerButton = [
+  {icon: Add, action: () => createChild(), style: "bg-primary px-3 text-on-primary"},
+  {icon: Delete, action: () => deleteNote(), style: "border transition-all duration-300 border-outline-variant hover:bg-error-container hover:text-on-error-container"},
+]
 
 $effect(() => {
   return () => {
@@ -23,7 +35,12 @@ $effect(() => {
     }
   };
 });
-
+function handleKeydown(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+      e.preventDefault();
+      edit = !edit;
+    }
+  }
 
 const getBreadcrumbs = (currentNote, allNotes) => {
   if (!currentNote || allNotes.length === 0) {
@@ -55,59 +72,43 @@ async function deleteNote() {
   goto(parent ? `/notes/${parent}` : '/notes');
 }
 </script>
+    <svelte:window onkeydown={handleKeydown} />
 
-{#if !note}
-  <div class="flex justify-center w-full h-full text-center flex-col animate-pulse text-on-surface-variant">
-    Loading.....
+{#if !note || appState.authLoading || appState.loading}
+  <div class="fixed inset-0 bg-surface/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+    <Loader size="sm" />
   </div>
+
 {:else}
+
   <div class="flex flex-col w-full h-full min-h-dvh overflow-auto absolute top-0 p-3 z-100 bg-surface-container gap-2" >
-    <nav class="flex max-w-full items-center p-2 gap-2 text-sm text-on-surface-variant/90 mb-2">
-      <a href="/notes">Home</a>
-      {#each breadcrumbs as crumb}
-        <span>/</span>
-        <a href="/notes/{crumb.id}">
-          {crumb.title || 'Untitled'}
-        </a>
-      {/each}
-    </nav>
+    <header class="flex items-center mb-1 max-w-full  justify-between">
+      <a href={note.parentId ? note.parentId : "/notes"} class="rounded-full p-1 mr-2 transition active:rounded-lg border border-outline-variant" ><Back /></a>
+      <input bind:value={note.title} class="p-2 text-xl w-full font-medium" defaultvalue="Untitled" placeholder="Title" type="text">
+      <ButtonGroup items={headerButton} />
+    </header>
+    <hr class="opacity-20" />
+     
 
-
-    <div class="flex p-3 mb-2 justify-between items-center">
-      <input type="text" placeholder="untitled" class="text-2xl w-full font-semibold" value={note.title} oninput={(e) => {appState.updateNote(id, {title: e.target.value})}}>
-      <div class="flex gap-2">
-        <button class="bg-primary text-on-primary rounded-lg p-2" onclick={createChild}>
-          <Add /> 
-        </button>
-        <button 
-          onclick={() => { 
-            confirm("Delete the note?") && (appState.deleteNote(note.id), goto("/notes"));
-          }} 
-          class="border border-outline-variant text-primary p-2 rounded-lg"
-        >
-          <Delete /> 
-        </button>
+    <div class="flex justify-between items-center my-2 gap-1  text-on-surface-variant text-sm m-2">
+      <div class="flex gap-0.5 max-w-fit mr-4 overflow-x-auto">
+      <a href='/notes'>Home</a>
+    {#each breadcrumbs as breadcrumb }
+        <Right class='opacity-50' />
+        <a href={breadcrumb.id} class="text-nowrap hover:text-primary transition-all">{breadcrumb.title}</a>
+    {/each}
       </div>
-
-    </div>
-
-    {#if children.length > 0}
-      <div class="flex p-3 md:mx-5 md:grid md:grid-cols-3 md:gap-3 md:bg-transparent md:p-0 max-h-[15vh] overflow-auto snap-mandatory bg-surface-container-high my-2 rounded-xl flex-col gap-1 shrink-0">
-        {#each children as child}
-          <a 
-            href="/notes/{child.id}" 
-            class="flex text-on-surface items-center md:p-3 md:bg-secondary-container/70 md:rounded-lg gap-2 p-1"
-          >
-            <Note class="text-base text-on-surface-variant" />
-            <span>{child.title || 'Untitled'}</span>
-          </a>
-        {/each}
-      </div>
-    {/if}
-
-
-  <MarkdownEditor {note} />
+      <button 
+        aria-label="mode"
+        class="p-2 bg-secondary text-on-secondary text-sm rounded-lg active:opacity-90 hover:rounded-xl  transition-all duration-200 font-medium"
+        onclick={() => {edit = !edit}}
+      >
+     <Icon />
+      </button>
   </div>
+     <MarkdownEditor {note} {children} {edit} />
+</div>
+
 {/if}
 
 
