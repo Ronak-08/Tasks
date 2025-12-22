@@ -23,7 +23,7 @@ onMount(async() => {
 <main class="flex h-dvh w-full overflow-hidden bg-bg text-on-bg flex-col md:flex-row-reverse">
   <div class="flex flex-1 flex-col min-w-0 relative">
         <CommandPalette {isOpen} />
-    <header class="flex-none md:hidden z-10 m-2">
+    <header class="flex-none lg:hidden z-10 m-2">
       <div class="flex items-center justify-between p-1 gap-3">
         <button class="mx-1 transition-all active:rounded-2xl bg-surface-container-high rounded-full p-2" onclick={() => {isOpen = !isOpen}}><Search /></button>
         <div class="flex-none md:hidden">
