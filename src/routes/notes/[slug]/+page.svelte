@@ -17,6 +17,7 @@ import Button from '$lib/components/Button.svelte';
     import Loader from '$lib/components/Loader.svelte';
 
 const id = $derived($page.params.slug);
+let titleInput = $state();
 const note = $derived(appState.notes.find(n => n.id == id));
 let edit = $state(true);
 let Icon = $derived(edit ? Edit : Preview );
@@ -35,6 +36,16 @@ $effect(() => {
     }
   };
 });
+
+let timer;
+function handleTitle(e) {
+  const val = e.target.value;
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    appState.updateNote(note.id, { title: val });
+  }, 500);
+}
+
 function handleKeydown(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
       e.preventDefault();
@@ -60,8 +71,13 @@ const getBreadcrumbs = (currentNote, allNotes) => {
   return path.reverse();
 }
 let breadcrumbs = $derived(getBreadcrumbs(note, appState.notes));
-
 async function createChild() {
+  if(!note.title || !note.title.trim()) {
+    if(titleInput) {
+      titleInput.focus();
+    }
+    return;
+  }
   const newId = await appState.addNote(id); 
   goto(`/notes/${newId}`); 
 }
@@ -75,7 +91,7 @@ async function deleteNote() {
     <svelte:window onkeydown={handleKeydown} />
 
 {#if !note || appState.authLoading || appState.loading}
-  <div class="fixed inset-0 bg-surface/50 backdrop-blur-sm z-[100] flex items-center justify-center">
+  <div class="fixed inset-0 bg-surface/50 backdrop-blur-sm z-100 flex items-center justify-center">
     <Loader size="sm" />
   </div>
 
@@ -83,9 +99,15 @@ async function deleteNote() {
 
   <div class="flex flex-col w-full h-full min-h-dvh overflow-auto absolute top-0 p-3 z-100 bg-surface-container gap-2" >
     <header class="flex items-center mb-1 max-w-full  justify-between">
-      <a href={note.parentId ? note.parentId : "/notes"} class="rounded-full p-1 mr-2 transition active:rounded-lg border border-outline-variant" ><Back /></a>
-      <input bind:value={note.title} class="p-2 text-xl w-full font-medium" defaultvalue="Untitled" placeholder="Title" type="text">
-      <ButtonGroup items={headerButton} />
+      <a href={note.parentId ? note.parentId : "/notes"} class="rounded-full p-2 mr-2 transition active:rounded-lg border border-outline-variant" ><Back /></a>
+      <input bind:this={titleInput} oninput={handleTitle} value={note.title} class="p-2 text-center text-2xl w-full font-bold" placeholder="Untitled" type="text">
+      <button 
+        aria-label="mode"
+        class="p-2.5 bg-secondary-container text-on-secondary-container text-sm rounded-xl active:opacity-90 hover:scale-[0.98] active:rounded-lg  transition font-medium"
+        onclick={() => {edit = !edit}}
+      >
+     <Icon />
+      </button>
     </header>
     <hr class="opacity-20" />
      
@@ -95,16 +117,10 @@ async function deleteNote() {
       <a href='/notes'>Home</a>
     {#each breadcrumbs as breadcrumb }
         <Right class='opacity-50' />
-        <a href={breadcrumb.id} class="text-nowrap hover:text-primary transition-all">{breadcrumb.title}</a>
+        <a href={breadcrumb.id} class="text-nowrap hover:text-primary max-w-20 truncate transition">{breadcrumb.title}</a>
     {/each}
       </div>
-      <button 
-        aria-label="mode"
-        class="p-2 bg-secondary text-on-secondary text-sm rounded-lg active:opacity-90 hover:rounded-xl  transition-all duration-200 font-medium"
-        onclick={() => {edit = !edit}}
-      >
-     <Icon />
-      </button>
+      <ButtonGroup items={headerButton} />
   </div>
      <MarkdownEditor {note} {children} {edit} />
 </div>

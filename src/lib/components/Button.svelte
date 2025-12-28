@@ -13,7 +13,7 @@ let variantClass = $derived(styles[variant] || styles.filled);
 </script>
 
 <button 
-  class="p-2 rounded-full active:rounded-xl font-medium transition-all duration-300 active:opacity-95 flex items-center justify-center gap-2 {variantClass} {className}"
+  class="p-2 rounded-full active:rounded-xl font-medium transition active:opacity-90 flex items-center justify-center gap-2 {variantClass} {className}"
   {...rest}
 >
   {@render children?.()}

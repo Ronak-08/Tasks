@@ -21,9 +21,6 @@ let lastId = $state(note.id);
 let renderHtml = $derived(content ? DOMPurify.sanitize(marked.parse(content)) : "");
 let timer;
 
-function autofocus(node) {
-    node.focus();
-}
 
 function handleInput(e) {
   content = e.target.value;
@@ -47,7 +44,6 @@ $effect(() => {
     {#if edit}
       <textarea 
         bind:this={editor}
-        use:autofocus
         name="markdown" 
         oninput={handleInput} 
         class="

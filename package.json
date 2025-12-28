@@ -15,6 +15,7 @@
     "@sveltejs/adapter-netlify": "^5.2.4",
     "@sveltejs/kit": "latest",
     "@sveltejs/vite-plugin-svelte": "latest",
+    "eruda": "^3.4.3",
     "rollup-plugin-visualizer": "latest",
     "svelte": "latest",
     "unplugin-icons": "^22.5.0",

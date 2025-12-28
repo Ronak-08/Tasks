@@ -7,7 +7,7 @@ import Add from "~icons/material-symbols/add";
 import Check from "~icons/material-symbols/check";
 import NoteRow from '$lib/components/NoteRow.svelte';
 import { fade } from 'svelte/transition';
-    import Button from '$lib/components/Button.svelte';
+import Button from '$lib/components/Button.svelte';
 
 let rootNotes = $derived(appState.notes.filter(n => !n.parentId));
 let filteredList = $derived(
@@ -47,8 +47,8 @@ async function create() {
 </script>
 
 <div class="h-full p-4 md:px-5 mx-2 select-none">
-  <header class="flex justify-between items-center mb-8">
-    <h1 class="text-xl md:text-2xl md:mx-1 font-medium text-on-surface">
+  <header class="flex justify-between items-center mb-10">
+    <h1 class="text-2xl md:mx-1 font-bold text-on-surface/90">
       Notebooks
     </h1>
     <div class="flex gap-1">
@@ -56,13 +56,14 @@ async function create() {
         <button class="p-2 px-3 transition duration-300 active:scale-[0.99] active:opacity-95 active:rounded-full bg-error-container disabled:opacity-50 text-on-error-container rounded-xl" disabled={selected.length === 0} onclick={batchDelete}>Delete ({selected.length})</button>
         <Button 
           variant='normal'
+          class="px-2.5"
           onclick={() => { isSelecting = false; selected = []; }}>
           <Close />
         </Button>
       {:else}
         {#if rootNotes.length > 0}
           <Button variant='normal' onclick={() => isSelecting = true} class="rounded-lg">
-            <Select class="h-6 w-6" />
+            <Select class="h-5 w-6" />
           </Button>
         {/if} 
         <Button class="md:hidden rounded-lg" onclick={create}>
@@ -77,7 +78,7 @@ async function create() {
       {@const isSelected = selected.includes(note.id)}
       <div 
         class="
-        relative rounded-xl transition-all duration-200 border-2 cursor-pointer
+        relative rounded-2xl transition-all duration-200 border-2 cursor-pointer
         {isSelected 
           ? 'border-primary bg-primary-container/10' 
           : 'border-transparent hover:bg-surface-container-low'}

@@ -3,53 +3,34 @@ let { size = "md", class: className } = $props();
 
 const sizes = {
   sm: "size-8",
-  md: "size-16",
-  lg: "size-24",
-  xl: "size-32"
+  md: "size-10",
+  lg: "size-16",
+  xl: "size-24"
 };
 
 let sizeClass = $derived(sizes[size] || sizes.md);
 </script>
 
-<div class="relative flex items-center justify-center {sizeClass} {className}" aria-label="Loading">
-
-  <div class="
-    absolute inset-0 
-    bg-primary-container 
-    opacity-80
-    animate-expressive-morph-slow
-    "></div>
-
-  <div class="
-    absolute inset-2
-    bg-primary 
-    animate-expressive-morph-fast 
-    shadow-sm
-    "></div>
-
+<div class="relative loader flex items-center justify-center {sizeClass} {className}" aria-label="Loading">
 </div>
 
 <style>
-@keyframes morph {
-0% { border-radius: 60% 40% 35% 70% / 60% 35% 70% 40%; }
-50% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
-100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+.loader {
+  width: 30px;
+  aspect-ratio: 1;
+  --c1:linear-gradient(90deg,#0000 calc(100%/3),var(--color-primary) 0 calc(2*100%/3),#0000 0);
+  --c2:linear-gradient( 0deg,#0000 calc(100%/3),var(--color-primary) 0 calc(2*100%/3),#0000 0);
+  background: var(--c1),var(--c2),var(--c1),var(--c2);
+  background-size: 300% 4px,4px 300%;
+  background-repeat: no-repeat;
+  animation: l3 1s infinite linear;
 }
-
-@keyframes rotate-blob {
-0% { transform: rotate(0deg); }
-100% { transform: rotate(360deg); }
-}
-
-.animate-expressive-morph-slow {
-  animation: 
-    morph 1s ease-in-out infinite, 
-    rotate-blob 2s linear infinite;
-}
-
-.animate-expressive-morph-fast {
-  animation: 
-    morph 0.5s ease-in-out infinite alternate, 
-    rotate-blob 2s linear infinite reverse;
+@keyframes l3 {
+0%   {background-position: 50%  0,100% 100%,0    100%,0 0}
+25%  {background-position: 0    0,100% 50% ,0    100%,0 0}
+50%  {background-position: 0    0,100% 0   ,50%  100%,0 0}
+75%  {background-position: 0    0,100% 0   ,100% 100%,0 50%}
+75.01%{background-position: 100% 0,100% 0   ,100% 100%,0 50%}
+100% {background-position: 50%  0,100% 0   ,100% 100%,0 100%}
 }
 </style>
