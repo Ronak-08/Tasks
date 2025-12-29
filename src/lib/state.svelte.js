@@ -19,9 +19,9 @@ class AppState {
   showModal = $state(false);
   unsubs = [];
 
- async handleAction(path) {
+  async handleAction(path) {
     if(path === '/') {
-    this.showModal = !this.showModal;
+      this.showModal = !this.showModal;
     } else if(path.startsWith('/notes')) {
       const newId = await this.addNote(null);
       goto(`/notes/${newId}`);
@@ -114,11 +114,11 @@ class AppState {
       batchPromises.push(setDoc(taskRef, {
         ...data,
         createdAt: data.createdAt || serverTimestamp() 
-      }, { merge: true })); // <--- PREVENTS ERRORS
+      }, { merge: true }));
     }
     for (const note of localNotes) {
       const { id, ...data } = note;
-      const docId = String(id); // Important!
+      const docId = String(id);
 
       const noteRef = doc(db, 'users', uid, 'notes', docId);
       batchPromises.push(setDoc(noteRef, {
@@ -221,7 +221,7 @@ class AppState {
     }
   }
 
-async updateNote(id, data) {
+  async updateNote(id, data) {
     const payload = { ...data, updatedAt: serverTimestamp() };
 
     if (this.user) {

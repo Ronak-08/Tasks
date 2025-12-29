@@ -6,8 +6,8 @@ import Select from "~icons/material-symbols/select";
 import Add from "~icons/material-symbols/add";
 import Check from "~icons/material-symbols/check";
 import NoteRow from '$lib/components/NoteRow.svelte';
-import { fade } from 'svelte/transition';
 import Button from '$lib/components/Button.svelte';
+import Loader from '$lib/components/Loader.svelte';
 
 let rootNotes = $derived(appState.notes.filter(n => !n.parentId));
 let filteredList = $derived(
@@ -40,11 +40,20 @@ async function batchDelete() {
 }
 
 
+let loading = $state(false);
 async function create() {
+  loading = true;
   const id = await appState.addNote(null); 
   goto(`/notes/${id}`);
+  loading = false;
 }
 </script>
+
+{#if loading}
+  <div class="fixed inset-0 backdrop-blur-sm z-100 flex items-center justify-center">
+    <Loader size="sm" />
+  </div>
+{/if}
 
 <div class="h-full p-4 md:px-5 mx-2 select-none">
   <header class="flex justify-between items-center mb-10">

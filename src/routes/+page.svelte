@@ -46,7 +46,14 @@ let filteredList = $derived(
   })
 );
 
-let activeTasks = $derived(filteredList.filter(t => !t.completed));
+const priorityOrder = { high: 0, medium: 1, low: 2 };
+
+let activeTasks = $derived(
+  filteredList
+    .filter(t => !t.completed)
+    .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
+);
+
 let completedTasks = $derived(filteredList.filter(t => t.completed));
 
 let totalTasks = $derived(appState.tasks.length);
@@ -89,7 +96,11 @@ function handleSubtaskKeydown(e) {
 async function show(task) {
   appState.showModal = true;
   await tick();
-  if(taskInput) taskInput.focus();
+
+  setTimeout(() => {
+    if(taskInput) taskInput.focus();
+  }, 100); 
+
   isUpdating = true;
   newTaskTitle = task.title || "";
   newTaskDesc = task.desc || "";
@@ -138,7 +149,7 @@ function handleAdd(e) {
 
 </script>
 
-<main class="mx-auto p-4 md:px-5 h-full">
+<main class="mx-auto p-4 overflow-y-auto md:px-5 h-full">
   <div class="grid grid-cols-1 md:grid-cols-2 lg:max-w-5xl lg:mx-auto gap-4 md:gap-9 items-start">
     <div class="flex flex-col space-y-2 h-full overflow-y-auto">
 
@@ -295,8 +306,14 @@ function handleAdd(e) {
           />
         {/if}
         {#if showTagInput}
+          <datalist id="suggestions">
+            {#each allAvailableTags as tag }
+              <option value={tag}>{tag}</option>
+            {/each}
+          </datalist>
           <input 
             transition:fade={{duration: 100}}
+            list="suggestions"
             type="text" 
             bind:value={tagInput}
             onkeydown={addTag}

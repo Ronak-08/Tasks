@@ -27,7 +27,7 @@ onMount(async() => {
 });
 </script>
 
-<main class="flex h-dvh w-full overflow-hidden bg-bg text-on-bg flex-col md:flex-row-reverse">
+<main class="flex h-dvh w-full overflow-y-auto overflow-hidden bg-bg text-on-bg flex-col md:flex-row-reverse">
   <div class="flex flex-1 flex-col min-w-0 relative">
     <CommandPalette {isOpen} />
     <header class="flex-none lg:hidden z-10 m-2">
