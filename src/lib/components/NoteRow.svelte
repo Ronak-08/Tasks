@@ -10,7 +10,7 @@ let { note } = $props();
   href="/notes/{note.id}" 
   class="
    flex gap-2 h-32 border border-outline-variant/90
-  w-full p-3 rounded-2xl bg-surface-container-high
+  w-full p-3 transition hover:rounded-lg hover:brightness-95 rounded-2xl bg-surface-container-high
   "
   transition:fade={{ duration: 150 }}
 >

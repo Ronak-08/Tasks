@@ -1,5 +1,5 @@
 <script>
-import { page } from '$app/stores';
+import { page } from '$app/state';
 import { goto } from '$app/navigation';
 import { appState } from '$lib/state.svelte.js';
 
@@ -14,9 +14,9 @@ import NoteRow from '$lib/components/NoteRow.svelte';
 import MarkdownEditor from '$lib/components/MarkdownEditor.svelte';
 import ButtonGroup from '$lib/components/ButtonGroup.svelte';
 import Button from '$lib/components/Button.svelte';
-    import Loader from '$lib/components/Loader.svelte';
+import Loader from '$lib/components/Loader.svelte';
 
-const id = $derived($page.params.slug);
+const id = $derived(page.params.slug);
 let titleInput = $state();
 const note = $derived(appState.notes.find(n => n.id == id));
 let edit = $state(true);
