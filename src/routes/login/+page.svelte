@@ -1,7 +1,7 @@
 <script>
 import { goto } from '$app/navigation';
 import Button from '$lib/components/Button.svelte';
-import { getFirebase } from '$lib/firebase';
+import { auth,googleProvider,signInWithPopup,createUserWithEmailAndPassword,signInWithEmailAndPassword } from '$lib/firebase';
 import Icon from "@iconify/svelte";
 import { GoogleAuthProvider } from 'firebase/auth';
 
@@ -19,7 +19,6 @@ async function handleGoogle() {
   errorMsg = "";
 
   try {
-    const { auth,googleProvider, signInWithPopup } = await getFirebase();
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
     goto('/');
@@ -37,7 +36,6 @@ async function handleEmail(e) {
   errorMsg = "";
 
   try {
-    const { auth, createUserWithEmailAndPassword,signInWithEmailAndPassword  } = await getFirebase();
 
     if (isLoginMode) {
       await signInWithEmailAndPassword(auth, email, password);

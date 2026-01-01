@@ -57,7 +57,7 @@ async function create() {
 
 <div class="h-full p-4 md:px-5 mx-2 select-none">
   <header class="flex justify-between items-center mb-10">
-    <h1 class="text-2xl md:mx-1 font-bold text-on-surface/90">
+    <h1 class="text-3xl md:mx-1 font-bold text-on-surface">
       Notebooks
     </h1>
     <div class="flex gap-1">

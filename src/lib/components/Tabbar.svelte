@@ -6,6 +6,8 @@ import IconNotesOutline from '~icons/material-symbols/note-stack-outline';
 import IconNotesFilled from '~icons/material-symbols/note-stack';
 import Account from "~icons/material-symbols/person-add";
 import Add from "~icons/material-symbols/add"
+import SettingsOutline from "~icons/material-symbols/settings-outline";
+import SettingsFilled from "~icons/material-symbols/settings";
 import FAB from "./FAB.svelte";
 import { appState } from "$lib/state.svelte";
 
@@ -14,6 +16,7 @@ let path = $derived($page.url.pathname);
 const links = [
   { label: 'Tasks', href: '/', icon: IconHomeOutline, activeIcon: IconHomeFilled },
   { label: 'Notes', href: '/notes', icon: IconNotesOutline, activeIcon: IconNotesFilled },
+  { label: 'Settings', href: '/settings', icon: SettingsOutline, activeIcon: SettingsFilled},
 ];
 
 function isActive(href) {

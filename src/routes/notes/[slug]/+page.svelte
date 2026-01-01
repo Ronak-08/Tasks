@@ -19,7 +19,9 @@ import Loader from '$lib/components/Loader.svelte';
 const id = $derived(page.params.slug);
 let titleInput = $state();
 const note = $derived(appState.notes.find(n => n.id == id));
+let settings = JSON.parse(localStorage.getItem("settings") || "{}");
 let edit = $state(true);
+edit = settings.defaultEdit;
 let Icon = $derived(edit ? Edit : Preview );
 let children = $derived(appState.notes.filter(n => n.parentId === id))
 let headerButton = [
@@ -28,11 +30,13 @@ let headerButton = [
 ]
 
 $effect(() => {
+  const currentId = id;
+
   return () => {
-    const target = appState.notes.find(n => n.id == id);
-    const hasKids = appState.notes.some(n => n.parentId == id);
+    const target = appState.notes.find(n => n.id == currentId);
+    const hasKids = appState.notes.some(n => n.parentId == currentId);
     if (target && !target.title?.trim() && !target.content?.trim() && !hasKids) {
-      appState.deleteNote(id);
+      appState.deleteNote(currentId);
     }
   };
 });
@@ -88,7 +92,7 @@ async function deleteNote() {
   goto(parent ? `/notes/${parent}` : '/notes');
 }
 </script>
-    <svelte:window onkeydown={handleKeydown} />
+<svelte:window onkeydown={handleKeydown} />
 
 {#if !note || appState.authLoading || appState.loading}
   <div class="fixed inset-0 bg-surface/50 backdrop-blur-sm z-100 flex items-center justify-center">
@@ -100,10 +104,10 @@ async function deleteNote() {
   <div class="flex flex-col w-full h-full min-h-dvh overflow-auto absolute top-0 p-3 z-100 bg-surface-container gap-2" >
     <header class="flex items-center mb-1 max-w-full  justify-between">
       <a href={note.parentId ? note.parentId : "/notes"} class="rounded-full p-2 mr-2 transition active:rounded-lg border border-outline-variant" ><Back /></a>
-      <input bind:this={titleInput} oninput={handleTitle} value={note.title} class="p-2 text-center text-2xl w-full font-bold" placeholder="Untitled" type="text">
+      <input style="font-variation-settings: 'ROND' 95;" bind:this={titleInput} oninput={handleTitle} value={note.title} class="p-2 text-center text-2xl w-full mx-2 font-[850]" placeholder="Untitled" type="text">
       <button 
         aria-label="mode"
-        class="p-2.5 bg-secondary-container text-on-secondary-container text-sm rounded-xl active:opacity-90 hover:scale-[0.98] active:rounded-lg  transition font-medium"
+        class="p-2.5 bg-secondary-container text-on-secondary-container text-sm rounded-full mr-1 active:opacity-90 hover:scale-[0.98] active:rounded-lg  transition font-medium"
         onclick={() => {edit = !edit}}
       >
      <Icon />

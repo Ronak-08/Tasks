@@ -65,7 +65,62 @@
   --color-surface-container-high: rgb(37 43 44);
   --color-surface-container-highest: rgb(48 54 55);
 
-  --font-sans: "Google Sans", system-ui, sans-serif;
+  --font-sans: "Google Sans Flex", system-ui, sans-serif;
+}
+
+@layer base {
+  .light {
+    --color-primary: rgb(0 105 115);
+    --color-surface-tint: rgb(0 105 115);
+    --color-on-primary: rgb(255 255 255);
+    --color-primary-container: rgb(157 240 252);
+    --color-on-primary-container: rgb(0 79 87);
+    --color-secondary: rgb(74 99 102);
+    --color-on-secondary: rgb(255 255 255);
+    --color-secondary-container: rgb(205 231 235);
+    --color-on-secondary-container: rgb(50 75 78);
+    --color-tertiary: rgb(81 94 125);
+    --color-on-tertiary: rgb(255 255 255);
+    --color-tertiary-container: rgb(217 226 255);
+    --color-on-tertiary-container: rgb(58 70 100);
+    --color-error: rgb(186 26 26);
+    --color-on-error: rgb(255 255 255);
+    --color-error-container: rgb(255 218 214);
+    --color-on-error-container: rgb(147 0 10);
+    --color-bg: rgb(245 250 251);
+    --color-on-bg: rgb(23 29 30);
+    --color-surface: rgb(245 250 251);
+    --color-on-surface: rgb(23 29 30);
+    --color-surface-variant: rgb(219 228 230);
+    --color-on-surface-variant: rgb(63 72 74);
+    --color-outline: rgb(111 121 122);
+    --color-outline-variant: rgb(190 200 202);
+    --color-shadow: rgb(0 0 0);
+    --color-scrim: rgb(0 0 0);
+    --color-inverse-surface: rgb(43 49 50);
+    --color-inverse-on-surface: rgb(236 242 243);
+    --color-inverse-primary: rgb(129 211 223);
+    --color-primary-fixed: rgb(157 240 252);
+    --color-on-primary-fixed: rgb(0 31 35);
+    --color-primary-fixed-dim: rgb(129 211 223);
+    --color-on-primary-fixed-variant: rgb(0 79 87);
+    --color-secondary-fixed: rgb(205 231 235);
+    --color-on-secondary-fixed: rgb(5 31 34);
+    --color-secondary-fixed-dim: rgb(177 203 207);
+    --color-on-secondary-fixed-variant: rgb(50 75 78);
+    --color-tertiary-fixed: rgb(217 226 255);
+    --color-on-tertiary-fixed: rgb(13 27 55);
+    --color-tertiary-fixed-dim: rgb(185 198 234);
+    --color-on-tertiary-fixed-variant: rgb(58 70 100);
+    --color-surface-dim: rgb(213 219 220);
+    --color-surface-bright: rgb(245 250 251);
+    --color-surface-container-lowest: rgb(255 255 255);
+    --color-surface-container-low: rgb(239 245 245);
+    --color-surface-container: rgb(233 239 240);
+    --color-surface-container-high: rgb(227 233 234);
+    --color-surface-container-highest: rgb(222 228 228);
+  }
+
 }
 
 .dark {
