@@ -34,7 +34,7 @@ function toggle() {
     ></div>
 
     <div 
-      class="absolute top-1 transition-all duration-200 rounded-full bg-surface shadow-md
+      class="absolute top-1 transition-all duration-200 rounded-full bg-surface
       {checked 
         ? 'left-[calc(100%-28px)] w-6 h-6' 
         : 'left-1 top-1.5 size-5 bg-on-primary'}"

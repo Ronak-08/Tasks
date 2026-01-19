@@ -1,5 +1,5 @@
 <script>
-let {className = "", items = [], ...rest} = $props();
+let {class: className, items = [], ...rest} = $props();
 </script>
 
 <div class="inline-flex gap-1 rounded-md p-1 {className}" role="group" {...rest}>

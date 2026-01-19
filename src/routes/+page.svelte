@@ -56,10 +56,7 @@ let activeTasks = $derived(
 
 let completedTasks = $derived(filteredList.filter(t => t.completed));
 
-let totalTasks = $derived(appState.tasks.length);
-let totalDone = $derived(appState.tasks.filter(t => t.completed).length);
 let active = $derived(appState.tasks.filter(t => !t.completed));
-let percent = $derived(totalTasks === 0 ? 0 : Math.round((totalDone / totalTasks) * 100));
 
 
 function addTag(e) {

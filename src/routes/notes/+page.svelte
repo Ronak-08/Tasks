@@ -8,6 +8,7 @@ import Check from "~icons/material-symbols/check";
 import NoteRow from '$lib/components/NoteRow.svelte';
 import Button from '$lib/components/Button.svelte';
 import Loader from '$lib/components/Loader.svelte';
+    import FAB from '$lib/components/FAB.svelte';
 
 let rootNotes = $derived(appState.notes.filter(n => !n.parentId));
 let filteredList = $derived(
@@ -55,29 +56,30 @@ async function create() {
   </div>
 {/if}
 
+<FAB 
+  onclick={create}
+  variant="tonal"
+  class="bottom-5 md:hidden size-15 right-4"
+>
+  <Add class="size-6" />
+</FAB>
 <div class="h-full p-4 md:px-5 mx-2 select-none">
-  <header class="flex justify-between items-center mb-10">
-    <h1 class="text-3xl md:mx-1 font-bold text-on-surface">
-      Notebooks
-    </h1>
-    <div class="flex gap-1">
+  <header class="flex justify-between items-center mb-5">
+    <div class="flex gap-1 rounded-full">
       {#if isSelecting}
-        <button class="p-2 px-3 transition duration-300 active:scale-[0.99] active:opacity-95 active:rounded-full bg-error-container disabled:opacity-50 text-on-error-container rounded-xl" disabled={selected.length === 0} onclick={batchDelete}>Delete ({selected.length})</button>
+        <button class="p-2 px-3 transition duration-300 active:scale-[0.99] active:opacity-95 active:rounded-full bg-error-container disabled:opacity-50 text-on-error-container rounded-l-2xl" disabled={selected.length === 0} onclick={batchDelete}>Delete ({selected.length})</button>
         <Button 
-          variant='normal'
-          class="px-2.5"
+          variant='outline'
+          class="px-2.5 rounded-l-2xl active:rounded-full"
           onclick={() => { isSelecting = false; selected = []; }}>
           <Close />
         </Button>
       {:else}
         {#if rootNotes.length > 0}
-          <Button variant='normal' onclick={() => isSelecting = true} class="rounded-lg">
-            <Select class="h-5 w-6" />
+          <Button variant='normal' onclick={() => isSelecting = true} class="rounded-xl">
+            <Select class="h-6 w-6" />
           </Button>
         {/if} 
-        <Button class="md:hidden rounded-lg" onclick={create}>
-          <Add class="h-6 w-6" />
-        </Button>
       {/if}
     </div>
   </header>
@@ -87,7 +89,7 @@ async function create() {
       {@const isSelected = selected.includes(note.id)}
       <div 
         class="
-        relative rounded-2xl transition-all duration-200 border-2 cursor-pointer
+        relative rounded-3xl transition-all duration-200 border-2 cursor-pointer
         {isSelected 
           ? 'border-primary bg-primary-container/10' 
           : 'border-transparent hover:bg-surface-container-low'}

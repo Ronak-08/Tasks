@@ -9,6 +9,7 @@ import Logout from "~icons/material-symbols/logout";
 import Account from "~icons/material-symbols/person-add";
 import Search from "~icons/material-symbols/search";
 import CommandPalette from "$lib/components/CommandPalette.svelte";
+import { page } from "$app/state";
 
 
 let { children } = $props();
@@ -31,8 +32,14 @@ onMount(async() => {
   <div class="flex flex-1 flex-col min-w-0 relative">
     <CommandPalette {isOpen} />
     <header class="flex-none lg:hidden z-10 m-2">
-      <div class="flex items-center justify-between p-1 gap-3">
-        <button class="mx-1 transition-all active:rounded-2xl bg-surface-container-high rounded-full p-2" onclick={() => {isOpen = !isOpen}}><Search /></button>
+      <div class="flex items-center justify-between  p-1 gap-3">
+        <button class="mx-1 transition-all active:rounded-2xl bg-surface-container-high rounded-full p-2 active:bg-primary-container active:text-on-primary-container active:px-3
+        " onclick={() => {isOpen = !isOpen}}><Search /></button>
+        {#if page.url.pathname === "/notes"}
+    <h1 class="text-2xl font-medium md:mx-auto">
+      Notebooks
+    </h1>
+        {/if}
         <div class="flex-none md:hidden">
           {#if appState.authLoading}
             <div class="h-9 w-9 mx-auto rounded-full animate-pulse bg-surface-container-high"></div>
