@@ -1,16 +1,9 @@
 <script>
   import { browser } from "$app/environment";
-  import Switch from "$lib/components/Switch.svelte";
-  import Button from "$lib/components/Button.svelte";
+  import {Switch, Button } from "svelte-libyou";
   import { appState } from "$lib/state.svelte";
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
-
-  const defaultSettings = {
-    defaultEdit: true,
-    toolBar: true,
-    markdown: false,
-  };
 
   let successMsg = $state(false);
   let isLight = $state(false);
@@ -83,24 +76,6 @@
     });
   }
 
-  let settings = $state(defaultSettings);
-
-  onMount(() => {
-    if (!browser) return;
-
-    try {
-      const savedSettings = localStorage.getItem("settings");
-      if (savedSettings) {
-        settings = { ...defaultSettings, ...JSON.parse(savedSettings) };
-      }
-    } catch (error) {
-      console.error("Error reading from localStorage:", error);
-    }
-  });
-
-  $effect(() => {
-    localStorage.setItem("settings", JSON.stringify(settings));
-  });
 </script>
 
 {#if successMsg}
@@ -113,50 +88,20 @@
 {/if}
 
 <main class="p-3 md:p-5">
-  <h1 class=" transition-all text-4xl m-3 mb-8 font-bold">
-    Settings
-  </h1>
+  <h1 class=" transition-all text-4xl m-3 mb-9 font-bold">Settings</h1>
 
   <div class="flex flex-col m-2">
     <div
-      class="flex mb-4 bg-surface-container-high items-center px-3 justify-between m-1 p-3 rounded-full"
+      class="flex mb-5 bg-surface-container-high items-center px-3 justify-between p-3 rounded-full"
     >
       <p class="p-1 font-medium">Light Theme</p>
       <Switch checked={isLight} onchange={toggleTheme} />
     </div>
-    <div
-      class="flex bg-surface-container-high rounded-2xl rounded-b-sm m-1 mb-0 justify-between p-2"
-    >
-      <div class="flex flex-col p-2 gap-1">
-        <p class="font-medium text-base">Disable Markdown</p>
-        <p class="font-normal text-on-surface-variant/80 text-xs">
-          Disable markdown in notes
-        </p>
-      </div>
-      <Switch bind:checked={settings.markdown} />
-    </div>
-    <div
-      class="flex bg-surface-container-high m-1 justify-between p-2"
-    >
-      <div class="flex flex-col p-2 gap-1">
-        <p class="font-medium text-base">Disable Toolbar</p>
-        <p class="font-normal text-on-surface-variant/80 text-xs">
-          Disable Toolbar in notes.
-        </p>
-      </div>
-      <Switch bind:checked={settings.toolBar} />
-    </div>
 
-    <div
-      class="flex bg-surface-container-high rounded-2xl rounded-t-sm mx-1 justify-between p-2"
-    >
-      <div class="flex flex-col p-2 gap-1">
-        <p class="font-medium text-base">Edit Mode</p>
-        <p class="font-normal text-on-surface-variant/80 text-xs">
-          Start in edit mode when opening note.
-        </p>
-      </div>
-      <Switch bind:checked={settings.defaultEdit} />
+    <div class="flex p-1 flex-col gap-1">
+      <a class="p-3 pl-3 transition active:rounded-3xl bg-surface-container-high rounded-2xl" href="/settings/note/">Notes <br><span class="text-xs text-on-surface-variant">markdown, toolbar</span>
+      
+      </a>
     </div>
 
     <p class="text-base text-on-surface-variant p-3 mt-4 font-medium">

@@ -13,7 +13,7 @@
   
   import { tick } from "svelte";
 
-  import Button from "./Button.svelte";
+  import {Button} from "svelte-libyou";
   import { slide } from "svelte/transition";
     import { preventDefault } from "svelte/legacy";
 
@@ -231,66 +231,60 @@ async function insertFormat(symbol, suffix = symbol) {
   class="h-full min-h-full bg-surface-container-lowest rounded-3xl md:mx-5 flex flex-col"
 >
 
-  <div class="flex-1 min-h-0 overflow-hidden relative w-full h-full">
-    {#if edit}
-      <textarea
-        bind:this={editor}
-        name="markdown"
-        oninput={handleInput}
-        onkeydown={(e) => {
-          handleKeyboardShortcuts(e);
-          handleKeyDown(e);
-        }}
-        class="
-w-full h-full
-bg-transparent outline-none border-none resize-none
-text-on-surface placeholder:text-on-surface-variant/80 leading-relaxed
-p-4 overflow-y-auto
-"
-        placeholder="Start writing your note..."
-        value={content}
-        id="markdown"
-      ></textarea>
-    {:else}
-      <div class="w-full h-full overflow-y-auto p-4">
-        {#if children.length > 0}
-          <div
-            class="not-prose flex text-sm flex-wrap gap-2 mb-3 border-b border-b-outline-variant/50 pb-4"
-          >
-            {#each children as child}
-              <a
-                class="rounded-lg px-3 py-1 transition-all hover:bg-secondary-container active:rounded-md hover:opacity-95 bg-surface-container-high"
-                href="/notes/{child.id}">{child.title || "Untitled"}</a
-              >
-            {/each}
-          </div>
-        {/if}
-        <div
-          class="prose prose-invert wrap-break-word prose-headings:mb-3 prose-headings:mt-6 prose-primary text-on-surface-variant max-w-none"
-        >
-          {#if !note.content}
-            <div
-              class="flex flex-col items-center justify-center h-full min-h-[360px] text-center"
-            >
-              <Note class="w-16 h-16 text-on-surface-variant/60 mt-4" />
-              <p class="text-on-surface-variant font-medium mt-5 text-sm">
-                No content
-              </p>
-              <Button
-                class="mt-1 text-sm text-primary/80 transiton hover:text-primary"
-                variant="text"
-                onclick={() => (edit = !edit)}
-              >
-                Start writing
-              </Button>
-            </div>
-          {:else}
-            {@html renderHtml}
-          {/if}
-        </div>
+<div class="flex-1 min-h-0 overflow-hidden relative w-full h-full">
+  {#if edit}
+    {#if children.length > 0 && settings.showFiles}
+      <div class="not-prose flex overflow-auto max-h-25 text-sm flex-wrap gap-2 m-3 border-b border-b-outline-variant/50 pb-4">
+        {#each children as child}
+          <a class="rounded-lg max-w-30 truncate px-3 py-1 transition-all hover:bg-secondary-container active:rounded-md hover:opacity-95 bg-surface-container-high" href="/notes/{child.id}">{child.title || "Untitled"}</a>
+        {/each}
       </div>
     {/if}
-  </div>
+    <textarea
+      bind:this={editor}
+      name="markdown"
+      oninput={handleInput}
+      onkeydown={(e) => {
+        handleKeyboardShortcuts(e);
+        handleKeyDown(e);
+      }}
+      class="w-full h-full bg-transparent outline-none border-none resize-none text-on-surface placeholder:text-on-surface-variant/80 leading-relaxed p-4 overflow-y-auto"
+      placeholder="Start writing your note..."
+      value={content}
+      id="markdown"
+    ></textarea>
+    
+
+  {:else}
+    <div class="w-full h-full overflow-y-auto p-4">
+      {#if children.length > 0} 
+      <div class="not-prose flex overflow-auto max-h-25 text-sm flex-wrap gap-2 mb-3 border-b border-b-outline-variant/50 pb-4">
+        {#each children as child}
+          <a class="rounded-lg max-w-30 truncate px-3 py-1 transition-all hover:bg-secondary-container active:rounded-md hover:opacity-95 bg-surface-container-high" href="/notes/{child.id}">{child.title || "Untitled"}</a>
+        {/each}
+      </div>
+      {/if}
+      
+      <div class="prose prose-invert wrap-break-word prose-headings:mb-3 prose-headings:mt-6 prose-primary text-on-surface-variant max-w-none">
+        {#if !note.content}
+          <div class="flex flex-col items-center justify-center h-full min-h-[360px] text-center">
+            <Note class="w-16 h-16 text-on-surface-variant/60 mt-4" />
+            <p class="text-on-surface-variant font-medium mt-5 text-sm">No content</p>
+            <Button
+              class="mt-1 text-sm text-primary/80 transiton hover:text-primary"
+              variant="text"
+              onclick={() => (edit = !edit)}
+            >
+              Start writing
+            </Button>
+          </div>
+        {:else}
+          {@html renderHtml}
+        {/if}
+      </div>
+    </div>
+  {/if}
+</div>
 
     {#if edit && !settings.toolBar}
     <div

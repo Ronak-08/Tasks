@@ -12,9 +12,7 @@
   import Note from "~icons/material-symbols/note-outline";
   import NoteRow from "$lib/components/NoteRow.svelte";
   import MarkdownEditor from "$lib/components/MarkdownEditor.svelte";
-  import ButtonGroup from "$lib/components/ButtonGroup.svelte";
-  import Button from "$lib/components/Button.svelte";
-  import Loader from "$lib/components/Loader.svelte";
+  import {Button, Loader} from "svelte-libyou";
   import { fade } from "svelte/transition";
 
   const id = $derived(page.params.slug);
@@ -133,7 +131,7 @@
           bind:this={titleInput}
           oninput={handleTitle}
           value={note.title}
-          class="p-2 text-center text-xl font-medium;
+          class="p-1 text-center text-xl font-medium;
 w-full mx-2"
           placeholder="Untitled"
           type="text"

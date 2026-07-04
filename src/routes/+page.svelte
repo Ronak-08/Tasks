@@ -1,6 +1,6 @@
 <script>
 import { appState } from '$lib/state.svelte';
-import { fade, fly, slide } from 'svelte/transition';
+import { fade, slide } from 'svelte/transition';
 import { flip } from 'svelte/animate';
 
 import Filter from "~icons/material-symbols/filter-alt-outline";
@@ -11,13 +11,9 @@ import Close from "~icons/material-symbols/close";
 import Add from "~icons/material-symbols/add"
 import Label from "~icons/material-symbols/label-outline"
 
-import Button from '$lib/components/Button.svelte';
-import Checkbox from '$lib/components/Checkbox.svelte';
-import FAB from '$lib/components/FAB.svelte';
+import { Button, Checkbox, FAB } from 'svelte-libyou';
 import TaskRow from '$lib/components/TaskRow.svelte';
-    import { tick } from 'svelte';
 
-let taskInput = $state();
 let newTaskTitle = $state("");
 let showAccordion = $state(false);
 let editingId = $state(null);
@@ -36,13 +32,8 @@ let tempTags = $state([]);
 let tagInput = $state("");
 let filteredList = $derived(
   appState.tasks.filter(t => {
-    const q = appState.searchQuery.toLowerCase().trim();
-    const matchesSearch = (
-      t.title.toLowerCase().includes(q) || 
-        (t.desc && t.desc.toLowerCase().includes(q))
-    );
     const matchesTag = selectedTag === "all" || (t.tags && t.tags.includes(selectedTag));
-    return matchesSearch && matchesTag;
+    return matchesTag;
   })
 );
 
@@ -58,7 +49,6 @@ let completedTasks = $derived(filteredList.filter(t => t.completed));
 
 let active = $derived(appState.tasks.filter(t => !t.completed));
 
-
 function addTag(e) {
   if(e.key === "Enter") {
     e.preventDefault();
@@ -72,7 +62,7 @@ function addTag(e) {
 }
 function removeTag(tagToRemove) {
   tempTags = tempTags.filter(t => t !== tagToRemove);
-}
+} 
 
 function handleSubtaskKeydown(e) {
   if (e.key === 'Enter') {
@@ -92,12 +82,6 @@ function handleSubtaskKeydown(e) {
 
 async function show(task) {
   appState.showModal = true;
-  await tick();
-
-  setTimeout(() => {
-    if(taskInput) taskInput.focus();
-  }, 100); 
-
   isUpdating = true;
   newTaskTitle = task.title || "";
   newTaskDesc = task.desc || "";
@@ -107,6 +91,7 @@ async function show(task) {
   tempTags = task.tags ? [...task.tags] : [];
   tempSubtasks = task.subtasks ? JSON.parse(JSON.stringify(task.subtasks)) : [];
 }
+
 function close() {
   appState.showModal = false;
   isUpdating = false;
@@ -179,7 +164,7 @@ function handleAdd(e) {
 
       <div class="space-y-2">
         {#each activeTasks as task (task.id)}
-          <TaskRow {task} onShow={show} />
+          <TaskRow {task} />
         {/each}
       </div>
     </div>
@@ -208,6 +193,9 @@ function handleAdd(e) {
           class="space-y-2 bg-surface-container-low overflow-y-auto max-h-[20vh] pb-3 md:max-h-full p-2 rounded-xl"
           transition:slide={{ duration: 200 }}
         >
+        {#if completedTasks.length === 0 && active.length > 0} 
+           <p class="text-on-surface-variant/70 text-center p-2 text-sm">No tasks completed</p>
+        {/if}
           {#each completedTasks as task (task.id)}
             <div 
               animate:flip={{ duration: 200 }} 
@@ -238,11 +226,13 @@ function handleAdd(e) {
 
 <FAB 
   onclick={() => appState.showModal = !appState.showModal}
-  variant="filled"
-  class="bottom-5 md:hidden size-16 right-4"
+  variant="tonal"
+  class="bottom-5 size-16 right-4"
 >
   <Add class="size-6" />
 </FAB>
+
+
 
 {#if appState.showModal}
   <div
@@ -256,23 +246,13 @@ function handleAdd(e) {
     class="fixed bottom-0 md:w-full md:max-w-[60%] lg:max-w-[40%] md:left-[20%] left-0 right-0 z-60 bg-surface-container rounded-t-3xl shadow-2xl overflow-hidden"
     role="dialog"
     aria-modal="true"
-    transition:slide={{ axis: 'y', duration: 250 }}
+    transition:slide={{ axis: 'y', duration: 240 }}
   >
-    <form onsubmit={handleAdd} class="flex flex-col p-5 gap-3 pb-safe-area">
+    <form onsubmit={handleAdd} class="flex flex-col p-5 my-1 gap-3 pb-safe-area">
       <div class="flex items-center justify-between mb-2">
-        {#if isUpdating}
-          <button 
-            type="button" 
-            class="border border-outline-variant p-1 hover:opacity-90 rounded-full text-error"
-            onclick={() => { if(confirm("Delete task?")) { appState.deleteTask(editingId); close(); }}}
-          >
-            <Delete class="text-base"/>
-          </button>
-        {:else}
           <div></div>
-        {/if}
 
-        <Button type="submit" class='px-3' variant="filled">
+        <Button type="submit" class='p-1' variant="filled">
           {isUpdating ? 'Save' : 'Create'}
         </Button>
       </div>
@@ -281,7 +261,6 @@ function handleAdd(e) {
         <input 
           type="text" 
           bind:value={newTaskTitle}
-          bind:this={taskInput}
           placeholder="What needs to be done?" 
           class="w-full bg-transparent border-0 p-0 mb-4 text-xl font-semibold placeholder-on-surface-variant focus:ring-0 text-on-surface"
           required

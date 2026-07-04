@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@source "../node_modules/svelte-libyou";
 @custom-variant hover (&:hover);
 
 @theme {

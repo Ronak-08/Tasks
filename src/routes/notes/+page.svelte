@@ -6,9 +6,7 @@ import Select from "~icons/material-symbols/select";
 import Add from "~icons/material-symbols/add";
 import Check from "~icons/material-symbols/check";
 import NoteRow from '$lib/components/NoteRow.svelte';
-import Button from '$lib/components/Button.svelte';
-import Loader from '$lib/components/Loader.svelte';
-    import FAB from '$lib/components/FAB.svelte';
+import {Button, Loader, FAB} from 'svelte-libyou';
 
 let rootNotes = $derived(appState.notes.filter(n => !n.parentId));
 let filteredList = $derived(
@@ -59,7 +57,7 @@ async function create() {
 <FAB 
   onclick={create}
   variant="tonal"
-  class="bottom-5 md:hidden size-15 right-4"
+  class="bottom-5 size-15 right-4"
 >
   <Add class="size-6" />
 </FAB>
@@ -119,7 +117,7 @@ async function create() {
 
       </div>
     {:else}
-      <div class="p-8 w-full col-span-full text-center text-on-surface-variant/60">
+      <div class="p-9 w-full col-span-full text-center text-on-surface-variant/80">
         No notebooks found
       </div>
     {/each}

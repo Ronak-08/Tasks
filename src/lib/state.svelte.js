@@ -33,6 +33,13 @@ class AppState {
   showModal = $state(false);
   searchQuery = $state("");
 
+  settings = $state({
+    defaultEdit: true,
+    toolBar: true,
+    markdown: false,
+    showFiles: false,
+  });
+
   initialized = false;
   unsubs = [];
 
@@ -70,7 +77,7 @@ class AppState {
 
     try {
       if (this.user) {
-        const { db } = await import('$lib/firebase'); // Ensure we have the instance
+        const { db } = await import('$lib/firebase'); 
         const batch = writeBatch(db);
 
         tasks.forEach(task => {

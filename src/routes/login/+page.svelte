@@ -1,6 +1,6 @@
 <script>
 import { goto } from '$app/navigation';
-import Button from '$lib/components/Button.svelte';
+import {Button} from 'svelte-libyou';
 import { auth,googleProvider,signInWithPopup,createUserWithEmailAndPassword,signInWithEmailAndPassword } from '$lib/firebase';
 import Icon from "@iconify/svelte";
 import { GoogleAuthProvider } from 'firebase/auth';
@@ -132,10 +132,8 @@ async function handleEmail(e) {
         type="button" 
         disabled={isLoading}
         variant='outline'
-        class='w-full py-3 bg-surface hover:bg-surface-container-highest border-outline/30'
       >
-        <Icon icon="devicon:google" class="text-xl mr-2" />
-        <span>Continue with Google</span>
+        <Icon icon="devicon:google" class="text-xl" />
       </Button>
 
       <div class="mt-8 text-center text-sm">
